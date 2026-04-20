@@ -1,20 +1,25 @@
 import 'package:flutter/material.dart';
 import 'data/models/user_model.dart';
-// Importations des screens des features
-import 'features/mobile_vendeur/screens/notification_screen.dart';
-import 'features/mobile_acheteur/screens/catalog_screen.dart';
-import 'features/web_gestionnaire/screens/stock_dashboard.dart';
-import 'features/web_finance/screens/finance_report_screen.dart';
-import 'features/web_admin/screens/admin_panel_screen.dart';
+// Importez vos écrans ici
+import 'features/web_gestionnaire/screens/stock_dashboard.dart'; 
 
 class AppRouter {
+  /// Redirige vers le bon écran selon le rôle de l'utilisateur
   static Widget getRoleBasedScreen(UserRole role) {
     switch (role) {
-      case UserRole.vendeur: return const NotificationVendeurScreen();
-      case UserRole.acheteur: return const CatalogAcheteurScreen();
-      case UserRole.gestionnaire: return const StockDashboardWeb();
-      case UserRole.finance: return const FinanceReportWeb();
-      case UserRole.admin: return const AdminPanelWeb();
+      case UserRole.gestionnaire:
+        return const StockDashboard();
+      case UserRole.vendeur:
+        // Remplacez par votre écran Vendeur
+        return const Scaffold(body: Center(child: Text("Écran Vendeur"))); 
+      case UserRole.acheteur:
+        return const Scaffold(body: Center(child: Text("Écran Acheteur")));
+      case UserRole.finance:
+        return const Scaffold(body: Center(child: Text("Écran Finance")));
+      case UserRole.admin:
+        return const Scaffold(body: Center(child: Text("Écran Admin")));
+      default:
+        return const Scaffold(body: Center(child: Text("Rôle non reconnu")));
     }
   }
 }

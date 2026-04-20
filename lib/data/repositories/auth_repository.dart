@@ -1,14 +1,30 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../supabase_client.dart';
 
 class AuthRepository {
-  final _client = Supabase.instance.client;
+  final _supabase = SupabaseClientManager.client;
 
-  Future<AuthResponse> login(String email, String password) async {
-    return await _client.auth.signInWithPassword(email: email, password: password);
+  Future<void> signIn(String email, String password) async {
+    await _supabase.auth.signInWithPassword(email: email, password: password);
+  }
+
+  Future<void> signUp(String email, String password, String name, String role) async {
+    // On s'assure que le rôle envoyé est exactement celui attendu par le type app_role
+    await _supabase.auth.signUp(
+      email: email,
+      password: password,
+      data: {
+        'full_name': name,
+        'role': role, 
+      },
+    );
   }
 
   Future<String> getUserRole(String userId) async {
-    final data = await _client.from('profiles').select('role').eq('id', userId).single();
-    return data['role'];
+    final response = await _supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+    return response['role'] as String;
   }
 }

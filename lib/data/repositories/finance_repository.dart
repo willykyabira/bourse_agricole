@@ -1,18 +1,15 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../supabase_client.dart';
 
 class FinanceRepository {
-  final _supabase = Supabase.instance.client;
+  // Maintenant, SupabaseClientManager est reconnu grâce à l'import
+  final _client = SupabaseClientManager.client;
 
-  // Récupérer le total des revenus des commandes validées
-  Future<double> getTotalRevenue() async {
-    final response = await _supabase
-        .from('orders')
-        .select('total_price');
-    
-    double total = 0;
-    for (var item in response) {
-      total += (item['total_price'] ?? 0).toDouble();
-    }
-    return total;
+  Future<List<Map<String, dynamic>>> getRevenueStats() async {
+    // Récupération des données financières (montant et acheteur) [cite: 62, 70]
+    final response = await _client.from('commandes').select('''
+      montant_total,
+      acheteurs (nom, prenom)
+    '''); 
+    return response;
   }
 }
