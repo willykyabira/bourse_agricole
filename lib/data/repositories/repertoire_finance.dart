@@ -1,6 +1,6 @@
 import '../supabase_client.dart';
 
-class FinanceRepository {
+class RepertoireFinance {
   // Maintenant, SupabaseClientManager est reconnu grâce à l'import
   final _client = SupabaseClientManager.client;
 

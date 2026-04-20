@@ -1,4 +1,4 @@
-class OrderModel {
+class ModeleCommande {
   final String? id;
   final String acheteurId;
   final String produitId;
@@ -6,7 +6,7 @@ class OrderModel {
   final double total;
   final DateTime createdAt;
 
-  OrderModel({
+  ModeleCommande({
     this.id,
     required this.acheteurId,
     required this.produitId,
@@ -15,7 +15,7 @@ class OrderModel {
     required this.createdAt,
   });
 
-  factory OrderModel.fromJson(Map<String, dynamic> json) => OrderModel(
+  factory ModeleCommande.fromJson(Map<String, dynamic> json) => ModeleCommande(
     id: json['id'],
     acheteurId: json['acheteur_id'],
     produitId: json['produit_id'],

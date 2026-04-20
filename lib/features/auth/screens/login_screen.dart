@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../data/repositories/auth_repository.dart';
+import '../../../data/repositories/repertoire_authentification.dart';
 import '../../../router.dart';
-import '../../../data/models/user_model.dart';
+import '../../../data/models/modele_utilisateur.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -19,7 +19,7 @@ class _LoginScreenState extends State<LoginScreen> {
   UserRole _selectedRole = UserRole.vendeur;
 
   void _handleLogin() async {
-    final authRepo = AuthRepository();
+    final authRepo = RepertoireAuthentification();
     try {
       // Tentative de connexion via Supabase/Repository
       await authRepo.signIn(_email.text.trim(), _pass.text.trim());

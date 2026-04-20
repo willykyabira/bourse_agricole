@@ -2,17 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class AddProductPage extends StatefulWidget {
+class AjouterProduit extends StatefulWidget {
   final Map<String, dynamic>? productToEdit;
   final bool isDialog;
 
-  const AddProductPage({super.key, this.productToEdit, required this.isDialog});
+  const AjouterProduit({super.key, this.productToEdit, required this.isDialog});
 
   @override
-  State<AddProductPage> createState() => _AddProductPageState();
+  State<AjouterProduit> createState() => _AjouterProduitState();
 }
 
-class _AddProductPageState extends State<AddProductPage> {
+class _AjouterProduitState extends State<AjouterProduit> {
   final Color primaryGreen = const Color(0xFF1B5E20);
   final _formKey = GlobalKey<FormState>();
   bool _isSaving = false;

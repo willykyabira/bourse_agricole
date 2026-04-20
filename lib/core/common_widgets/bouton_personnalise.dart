@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import '../constants/colors.dart';
 
-class CustomButton extends StatelessWidget {
+class BoutonPersonnalise extends StatelessWidget {
   final String label;
   final VoidCallback onPressed;
   final bool isPrimary;
 
-  const CustomButton({
+  const BoutonPersonnalise({
     super.key, 
     required this.label, 
     required this.onPressed, 

@@ -1,24 +1,24 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/seller_product_model.dart';
-import '../models/notification_model.dart';
+import '../models/modele_produit_vendeur.dart';
+import '../models/modele_notification.dart';
 
-class SellerRepository {
+class RepertoireVendeur {
   final SupabaseClient _supabase = Supabase.instance.client;
 
   // CAS 1: Consulter les informations de ses produits (Manioc, etc.)
-  Future<List<SellerProductModel>> getMyProducts(String sellerId) async {
+  Future<List<ModeleProduitVendeur>> getMyProducts(String sellerId) async {
     final response = await _supabase
         .from('products')
         .select()
         .eq('vendeur_id', sellerId); // Filtrer par l'ID du vendeur
     
     return (response as List)
-        .map((json) => SellerProductModel.fromJson(json))
+        .map((json) => ModeleProduitVendeur.fromJson(json))
         .toList();
   }
 
   // CAS 2: Consulter les notifications (Alertes de vente ou de réception)
-  Future<List<NotificationModel>> getMyNotifications(String sellerId) async {
+  Future<List<ModeleNotification>> getMyNotifications(String sellerId) async {
     final response = await _supabase
         .from('notifications')
         .select()
@@ -26,7 +26,7 @@ class SellerRepository {
         .order('created_at', ascending: false);
     
     return (response as List)
-        .map((json) => NotificationModel.fromJson(json))
+        .map((json) => ModeleNotification.fromJson(json))
         .toList();
   }
 }

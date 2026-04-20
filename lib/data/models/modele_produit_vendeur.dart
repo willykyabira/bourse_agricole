@@ -1,4 +1,4 @@
-class SellerProductModel {
+class ModeleProduitVendeur {
   final String id;
   final String nom;
   final int quantite;
@@ -6,7 +6,7 @@ class SellerProductModel {
   final DateTime dateDepot;
   final double prixFixe;
 
-  SellerProductModel({
+  ModeleProduitVendeur({
     required this.id,
     required this.nom,
     required this.quantite,
@@ -15,8 +15,8 @@ class SellerProductModel {
     required this.prixFixe,
   });
 
-  factory SellerProductModel.fromJson(Map<String, dynamic> json) {
-    return SellerProductModel(
+  factory ModeleProduitVendeur.fromJson(Map<String, dynamic> json) {
+    return ModeleProduitVendeur(
       id: json['id'],
       nom: json['nom'] ?? 'Produit inconnu',
       quantite: json['quantite'] ?? 0,

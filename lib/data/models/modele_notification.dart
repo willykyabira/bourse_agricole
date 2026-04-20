@@ -1,4 +1,4 @@
-class NotificationModel {
+class ModeleNotification {
   final String id;
   final String titre;
   final String message;
@@ -6,7 +6,7 @@ class NotificationModel {
   final bool lu;
   final String? type; // Pour distinguer 'vente', 'stock_bas', 'info'
 
-  NotificationModel({
+  ModeleNotification({
     required this.id,
     required this.titre,
     required this.message,
@@ -16,8 +16,8 @@ class NotificationModel {
   });
 
   /// Transforme les données JSON de Supabase en instance de NotificationModel
-  factory NotificationModel.fromJson(Map<String, dynamic> json) {
-    return NotificationModel(
+  factory ModeleNotification.fromJson(Map<String, dynamic> json) {
+    return ModeleNotification(
       id: json['id'] as String,
       titre: json['titre'] ?? '',
       message: json['message'] ?? '',

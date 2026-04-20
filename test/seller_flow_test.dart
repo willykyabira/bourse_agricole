@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:bourse_agricole/data/models/seller_product_model.dart';
+import 'package:bourse_agricole/data/models/modele_produit_vendeur.dart';
 
 void main() {
   group('Tests Application Mobile Vendeur', () {
@@ -14,7 +14,7 @@ void main() {
         'prix_unitaire': 1500.0
       };
 
-      final product = SellerProductModel.fromJson(mockJson);
+      final product = ModeleProduitVendeur.fromJson(mockJson);
 
       expect(product.nom, 'Manioc');
       expect(product.statut, 'En stock');

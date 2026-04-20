@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class OrderRepository {
+class RepertoireCommande {
   final _supabase = Supabase.instance.client;
 
   Future<void> createOrder(String productId, double quantity) async {

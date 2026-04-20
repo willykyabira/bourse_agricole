@@ -1,11 +1,11 @@
-class ProductModel {
+class ModeleProduit {
   final String? id;
   final String nom;
   final int quantite;
   final double prix;
   final String statut;
 
-  ProductModel({
+  ModeleProduit({
     this.id,
     required this.nom,
     required this.quantite,
@@ -14,8 +14,8 @@ class ProductModel {
   });
 
   // Conversion JSON (Supabase) -> Objet Dart
-  factory ProductModel.fromJson(Map<String, dynamic> json) {
-    return ProductModel(
+  factory ModeleProduit.fromJson(Map<String, dynamic> json) {
+    return ModeleProduit(
       id: json['id'],
       nom: json['nom'] ?? '',
       quantite: json['quantite'] ?? 0,

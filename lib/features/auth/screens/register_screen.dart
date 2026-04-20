@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../data/repositories/auth_repository.dart';
-import '../../../data/models/user_model.dart';
+import '../../../data/repositories/repertoire_authentification.dart';
+import '../../../data/models/modele_utilisateur.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -20,7 +20,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _handleRegister() async {
     setState(() => _isLoading = true);
-    final authRepo = AuthRepository();
+    final authRepo = RepertoireAuthentification();
     try {
       String roleSql;
       switch (_selectedRole) {

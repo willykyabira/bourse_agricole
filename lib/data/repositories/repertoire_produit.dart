@@ -1,6 +1,6 @@
 import '../supabase_client.dart';
 
-class ProductRepository {
+class RepertoireProduit {
   // Utilisation du nom correct : SupabaseClientManager
   final _db = SupabaseClientManager.client;
 

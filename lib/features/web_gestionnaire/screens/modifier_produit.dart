@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class EditProductPage extends StatefulWidget {
+class ModifierProduit extends StatefulWidget {
   final Map<String, dynamic> product;
-  const EditProductPage({super.key, required this.product});
+  const ModifierProduit({super.key, required this.product});
 
   @override
-  State<EditProductPage> createState() => _EditProductPageState();
+  State<ModifierProduit> createState() => _ModifierProduitState();
 }
 
-class _EditProductPageState extends State<EditProductPage> {
+class _ModifierProduitState extends State<ModifierProduit> {
   late TextEditingController _nomController;
   late TextEditingController _quantiteController;
   final _supabase = Supabase.instance.client;

@@ -1,6 +1,6 @@
 import '../supabase_client.dart';
 
-class AuthRepository {
+class RepertoireAuthentification {
   final _supabase = SupabaseClientManager.client;
 
   Future<void> signIn(String email, String password) async {

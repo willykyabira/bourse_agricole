@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'add_product_page.dart';
+import 'ajouter_produit.dart';
 
-class StockDashboard extends StatefulWidget {
-  const StockDashboard({super.key});
+class TableauDeBord extends StatefulWidget {
+  const TableauDeBord({super.key});
 
   @override
-  State<StockDashboard> createState() => _StockDashboardState();
+  State<TableauDeBord> createState() => _TableauDeBordState();
 }
 
-class _StockDashboardState extends State<StockDashboard> {
+class _TableauDeBordState extends State<TableauDeBord> {
   final _supabase = Supabase.instance.client;
   
   // Charte graphique BAN
@@ -300,11 +300,11 @@ class _StockDashboardState extends State<StockDashboard> {
   }
 
   void _showAddProductDialog(BuildContext context) {
-    showDialog(context: context, builder: (context) => const Dialog(child: AddProductPage(isDialog: true)));
+    showDialog(context: context, builder: (context) => const Dialog(child: AjouterProduit(isDialog: true)));
   }
 
   void _showEditProductDialog(Map<String, dynamic> p) {
-    showDialog(context: context, builder: (context) => Dialog(child: AddProductPage(isDialog: true, productToEdit: p)));
+    showDialog(context: context, builder: (context) => Dialog(child: AjouterProduit(isDialog: true, productToEdit: p)));
   }
 
   Widget _buildSecondaryActions() {

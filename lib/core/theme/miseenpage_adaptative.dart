@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-class ResponsiveLayout extends StatelessWidget {
+class MiseEnPageAdaptative extends StatelessWidget {
   final Widget mobileBody;
   final Widget webBody;
 
-  const ResponsiveLayout({
+  const MiseEnPageAdaptative({
     super.key,
     required this.mobileBody,
     required this.webBody,
