@@ -2,30 +2,31 @@ import 'package:flutter/material.dart';
 import '../../../data/repositories/repertoire_authentification.dart';
 import '../../../router.dart';
 import '../../../data/models/modele_utilisateur.dart';
-import 'register_screen.dart';
+import 'creer_compte.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class EcranConnexion extends StatefulWidget {
+  const EcranConnexion({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<EcranConnexion> createState() => _EcranConnexionState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _EcranConnexionState extends State<EcranConnexion> {
   final _email = TextEditingController();
   final _pass = TextEditingController();
   
   // Rôle sélectionné par défaut
   UserRole _selectedRole = UserRole.vendeur;
 
+  // État pour afficher/masquer le mot de passe
+  bool _obscureText = true;
+
   void _handleLogin() async {
     final authRepo = RepertoireAuthentification();
     try {
-      // Tentative de connexion via Supabase/Repository
       await authRepo.signIn(_email.text.trim(), _pass.text.trim());
       
       if (mounted) {
-        // Redirection vers l'écran correspondant au rôle choisi
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -78,7 +79,6 @@ class _LoginScreenState extends State<LoginScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // --- LOGO BAN ---
                 Image.asset(
                   'assets/images/logo_ban.png', 
                   height: 90,
@@ -99,19 +99,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 
                 const SizedBox(height: 40),
                 
-                // --- CHAMP EMAIL ---
                 _buildLabel("Email"),
-                _buildTextField(_email, "", Icons.person_outline),
+                _buildTextField(_email, "Entrez votre email", Icons.person_outline),
                 
                 const SizedBox(height: 20),
                 
-                // --- CHAMP MOT DE PASSE ---
                 _buildLabel("Mot de Passe"),
-                _buildTextField(_pass, "••••••", Icons.lock_outline, obscure: true),
+                // UTILISATION DU CHAMP MOT DE PASSE AVEC L'OEIL
+                _buildPasswordField(),
                 
                 const SizedBox(height: 20),
 
-                // --- LISTE DÉROULANTE DES RÔLES ---
                 _buildLabel("Se connecter en tant que :"),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -126,7 +124,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       isExpanded: true,
                       icon: const Icon(Icons.arrow_drop_down, color: primaryGreen),
                       items: const [
-                        DropdownMenuItem(value: UserRole.vendeur, child: Text("Vendeur (Agriculteur)")),
+                        DropdownMenuItem(value: UserRole.vendeur, child: Text("Vendeur")),
                         DropdownMenuItem(value: UserRole.acheteur, child: Text("Acheteur")),
                         DropdownMenuItem(value: UserRole.gestionnaire, child: Text("Gestionnaire de Stock")),
                         DropdownMenuItem(value: UserRole.finance, child: Text("Chargé de Finance")),
@@ -141,7 +139,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 
                 const SizedBox(height: 35),
                 
-                // --- BOUTON SE CONNECTER ---
                 SizedBox(
                   width: double.infinity,
                   height: 55,
@@ -158,7 +155,6 @@ class _LoginScreenState extends State<LoginScreen> {
                 
                 const SizedBox(height: 25),
                 
-                // --- LIEN CRÉATION DE COMPTE ---
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -166,7 +162,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     TextButton(
                       onPressed: () => Navigator.push(
                         context, 
-                        MaterialPageRoute(builder: (_) => const RegisterScreen())
+                        MaterialPageRoute(builder: (_) => const CreationCompte())
                       ), 
                       child: const Text(
                         "Créer un compte",
@@ -198,13 +194,48 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildTextField(TextEditingController ctrl, String hint, IconData icon, {bool obscure = false}) {
+  // Widget générique pour l'email
+  Widget _buildTextField(TextEditingController ctrl, String hint, IconData icon) {
     return TextField(
       controller: ctrl,
-      obscureText: obscure,
       decoration: InputDecoration(
         hintText: hint,
         prefixIcon: Icon(icon, size: 20),
+        filled: true,
+        fillColor: const Color(0xFFF8F9FA),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade200),
+        ),
+      ),
+    );
+  }
+
+  // WIDGET SPÉCIFIQUE POUR LE MOT DE PASSE AVEC ICÔNE DE VISIBILITÉ
+  Widget _buildPasswordField() {
+    return TextField(
+      controller: _pass,
+      obscureText: _obscureText,
+      decoration: InputDecoration(
+        hintText: "••••••",
+        prefixIcon: const Icon(Icons.lock_outline, size: 20),
+        // AJOUT DE L'ICÔNE OEIL
+        suffixIcon: IconButton(
+          icon: Icon(
+            _obscureText ? Icons.visibility_off : Icons.visibility,
+            size: 20,
+            color: Colors.grey,
+          ),
+          onPressed: () {
+            setState(() {
+              _obscureText = !_obscureText;
+            });
+          },
+        ),
         filled: true,
         fillColor: const Color(0xFFF8F9FA),
         border: OutlineInputBorder(

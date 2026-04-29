@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'features/auth/screens/login_screen.dart';
+import 'features/auth/screens/ecran_connexion.dart';
 
 void main() async {
   // 1. Assure l'initialisation des widgets Flutter
@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
       ),
 
       // 3. Point d'entrée : l'écran de Login que vous avez corrigé
-      home: const LoginScreen(),
+      home: const EcranConnexion(),
     );
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../auth/screens/ecran_connexion.dart'; // Import de l'écran de connexion
 
 class PageAccueilVendeur extends StatefulWidget {
   const PageAccueilVendeur({super.key});
@@ -16,6 +17,34 @@ class _PageAccueilVendeurState extends State<PageAccueilVendeur> {
   final Color surfaceWhite = const Color(0xFFFFFFFF);
   final Color lightGrey = const Color(0xFFF5F7F8);
 
+  // Fonction de déconnexion avec confirmation
+  void _handleLogout() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Déconnexion"),
+        content: const Text("Voulez-vous vraiment vous déconnecter de votre compte BAN ?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("ANNULER", style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () {
+              // On nettoie la pile et on retourne à la connexion
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const EcranConnexion()),
+                (route) => false,
+              );
+            },
+            child: const Text("SE DÉCONNECTER", style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,8 +52,8 @@ class _PageAccueilVendeurState extends State<PageAccueilVendeur> {
       body: SafeArea(
         child: Column(
           children: [
-            // Titre stylisé BOURSE AGRICOLE NUMÉRIQUE
-            _buildStylizedTextHeader(),
+            // Header avec BAN + Bouton Déconnexion
+            _buildTopBar(),
 
             // Corps principal blanc encadré
             Expanded(
@@ -41,14 +70,14 @@ class _PageAccueilVendeurState extends State<PageAccueilVendeur> {
                     children: [
                       _buildHomeTab(),
                       _buildDepotsTab(),
-                      _buildProfileTab(), // Formulaire Profil uniquement ici
+                      _buildProfileTab(),
                     ],
                   ),
                 ),
               ),
             ),
             
-            // Footer avec Icone + Texte
+            // Footer avec Navigation
             _buildFooter(),
           ],
         ),
@@ -56,21 +85,38 @@ class _PageAccueilVendeurState extends State<PageAccueilVendeur> {
     );
   }
 
-  Widget _buildStylizedTextHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20),
-      child: Column(
+  Widget _buildTopBar() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(25, 10, 10, 10),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          const Text("BAN", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 50, letterSpacing: 4.0)),
-          Text("BOURSE AGRICOLE NUMÉRIQUE", style: TextStyle(color: Colors.white.withOpacity(0.8), fontWeight: FontWeight.w300, fontSize: 18, letterSpacing: 1.5)),
-          const SizedBox(height: 5),
-          Container(width: 30, height: 2, decoration: BoxDecoration(color: const Color(0xFFFBC02D), borderRadius: BorderRadius.circular(10))),
+          // Texte BAN à gauche
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("BAN", style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 32, letterSpacing: 2)),
+              Text("Bourse Agricole", style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 12)),
+            ],
+          ),
+          // Bouton Déconnexion stylisé à droite
+          IconButton(
+            onPressed: _handleLogout,
+            icon: Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.power_settings_new_rounded, color: Color(0xFFFBC02D), size: 24),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  // --- ONGLET 1 : ACCUEIL (RESTÉ INTACT) ---
+  // --- ONGLET 1 : ACCUEIL ---
   Widget _buildHomeTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(25),
@@ -111,7 +157,7 @@ class _PageAccueilVendeurState extends State<PageAccueilVendeur> {
     );
   }
 
-  // --- ONGLET 2 : DÉPÔTS AVEC CLIC (RESTÉ INTACT) ---
+  // --- ONGLET 2 : DÉPÔTS ---
   Widget _buildDepotsTab() {
     final List<Map<String, dynamic>> produitsStock = [
       {
@@ -178,7 +224,7 @@ class _PageAccueilVendeurState extends State<PageAccueilVendeur> {
     );
   }
 
-  // --- ONGLET 3 : PROFIL (MODIFIÉ SEULEMENT ICI) ---
+  // --- ONGLET 3 : PROFIL ---
   Widget _buildProfileTab() {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(25),
@@ -218,6 +264,13 @@ class _PageAccueilVendeurState extends State<PageAccueilVendeur> {
               onPressed: () {},
               child: const Text("ENREGISTRER", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
             ),
+          ),
+          const SizedBox(height: 20),
+          // Option de déconnexion secondaire dans le profil
+          TextButton.icon(
+            onPressed: _handleLogout,
+            icon: const Icon(Icons.logout, color: Colors.red),
+            label: const Text("Se déconnecter", style: TextStyle(color: Colors.red)),
           ),
           const SizedBox(height: 30),
         ],

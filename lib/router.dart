@@ -1,28 +1,39 @@
-import 'package:bourse_agricole/features/mobile_vendeur/screens/page_accueil_vendeur.dart';
 import 'package:flutter/material.dart';
 import 'data/models/modele_utilisateur.dart';
-// Importez vos écrans ici
+
+// Imports des écrans existants
 import 'features/web_gestionnaire/screens/tableau_de_bord.dart'; 
-// AJOUTEZ CET IMPORT (vérifiez bien le chemin selon votre dossier)
+import 'features/web_finance/screens/ecran_finance.dart'; 
 import 'features/mobile_vendeur/screens/page_accueil_vendeur.dart'; 
+import 'features/mobile_acheteur/screens/page_accueil_acheteur.dart'; 
+
+// AJOUT : Import de votre nouvel écran d'administration système
+import 'features/web_admin/screens/ecran_admin_systeme.dart'; 
 
 class AppRouter {
   /// Redirige vers le bon écran selon le rôle de l'utilisateur
   static Widget getRoleBasedScreen(UserRole role) {
     switch (role) {
+      case UserRole.admin:
+        // REMPLACEMENT : On appelle l'écran réel au lieu du texte "Écran Admin"
+        return const EcranAdminSysteme(); 
+
       case UserRole.gestionnaire:
         return const TableauDeBord();
+        
       case UserRole.vendeur:
-        // REMPLACEZ LA LIGNE PRÉCÉDENTE PAR CELLE-CI :
         return const PageAccueilVendeur(); 
-      case UserRole.acheteur:
-        return const Scaffold(body: Center(child: Text("Écran Acheteur")));
+        
       case UserRole.finance:
-        return const Scaffold(body: Center(child: Text("Écran Finance")));
-      case UserRole.admin:
-        return const Scaffold(body: Center(child: Text("Écran Admin")));
+        return const EcranFinance(); 
+        
+      case UserRole.acheteur:
+        return const PageAccueilAcheteur(); 
+        
       default:
-        return const Scaffold(body: Center(child: Text("Rôle non reconnu")));
+        return const Scaffold(
+          body: Center(child: Text("Rôle non reconnu ou accès restreint")),
+        );
     }
   }
 }
