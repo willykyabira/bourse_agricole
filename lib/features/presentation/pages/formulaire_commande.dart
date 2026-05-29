@@ -1,224 +1,148 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'paiement_mobile.dart';
 
-class FormulaireCommandeWidget extends StatefulWidget {
-  final Map<String, dynamic> produitAchete;
-  final VoidCallback onCancel;
-  final Function(double quantite, String telephone, String operateur) onSuccess;
-
-  const FormulaireCommandeWidget({
-    super.key,
-    required this.produitAchete,
-    required this.onCancel,
-    required this.onSuccess,
-  });
+class FormulaireCommandePage extends StatefulWidget {
+  final Map<String, dynamic> produit;
+  const FormulaireCommandePage({super.key, required this.produit});
 
   @override
-  State<FormulaireCommandeWidget> createState() => _FormulaireCommandeWidgetState();
+  State<FormulaireCommandePage> createState() => _FormulaireCommandePageState();
 }
 
-class _FormulaireCommandeWidgetState extends State<FormulaireCommandeWidget> {
-  final _formKey = GlobalKey<FormState>();
-  final TextEditingController _phoneCtrl = TextEditingController();
-  final TextEditingController _qteCtrl = TextEditingController();
-  String _selectedOperator = 'M-Pesa';
+class _FormulaireCommandePageState extends State<FormulaireCommandePage> {
+  final _nomCtrl = TextEditingController();
+  final _telCtrl = TextEditingController();
+  final _qteCtrl = TextEditingController();
+  bool _isLoading = true;
 
-  final Color banGreen = const Color(0xFF1B5E20);
-  final Color banEarth = const Color(0xFF795548);
-
-  final List<Map<String, dynamic>> _operators = [
-    {'name': 'M-Pesa', 'color': Colors.red.shade700},
-    {'name': 'Airtel Money', 'color': Colors.red.shade900},
-    {'name': 'Orange Money', 'color': Colors.orange.shade800},
-  ];
+  // Palette de couleurs Super Designer
+  static const Color primaryGreen = Color(0xFF2E7D32);
+  static const Color backgroundSand = Color(0xFFF9F7F2);
 
   @override
   void initState() {
     super.initState();
-    _qteCtrl.text = "100";
+    _fetchUserData();
   }
 
-  @override
-  void dispose() {
-    _phoneCtrl.dispose();
-    _qteCtrl.dispose();
-    super.dispose();
+  Future<void> _fetchUserData() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      try {
+        final data = await Supabase.instance.client
+            .from('profiles')
+            .select('full_name, phone')
+            .eq('id', user.id)
+            .maybeSingle();
+        
+        if (data != null) {
+          _nomCtrl.text = data['full_name'] ?? '';
+          _telCtrl.text = data['phone'] ?? '';
+        }
+      } catch (e) {
+        debugPrint("Erreur récupération profil: $e");
+      }
+    }
+    setState(() => _isLoading = false);
   }
 
   @override
   Widget build(BuildContext context) {
-    final double prixUnitaire = double.tryParse(widget.produitAchete['prix_unitaire'].toString()) ?? 2.0;
-    final String nomProduit = (widget.produitAchete['nom_produit'] ?? 'PRODUIT').toString().toUpperCase();
-    final double stockDispo = double.tryParse(widget.produitAchete['quantite'].toString()) ?? 500.0;
-
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: InkWell(
-                onTap: widget.onCancel,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.arrow_back_ios, size: 12, color: banGreen),
-                    const SizedBox(width: 4),
-                    Text(
-                      "Retour aux articles",
-                      style: GoogleFonts.inter(color: banGreen, fontSize: 13, fontWeight: FontWeight.w600),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 15),
-
-            Text(
-              "FINALISATION DE COMMANDE",
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.black87),
-            ),
-            const SizedBox(height: 4),
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Container(width: 35, height: 3, color: Colors.amber.shade700, margin: const EdgeInsets.only(bottom: 25)),
-            ),
-
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: banGreen.withOpacity(0.05),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: banGreen.withOpacity(0.1)),
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    backgroundColor: banGreen,
-                    child: const Icon(Icons.eco_outlined, color: Colors.white),
+    return Scaffold(
+      backgroundColor: backgroundSand,
+      appBar: AppBar(
+        title: const Text("Vos informations"),
+        backgroundColor: primaryGreen,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: _isLoading 
+        ? const Center(child: CircularProgressIndicator(color: primaryGreen)) 
+        : SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // --- CARTE RÉCAPITULATIVE (Design Premium) ---
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.grey.shade200),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(nomProduit, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 15, color: banGreen)),
-                        const SizedBox(height: 2),
-                        Text("Prix unitaire : $prixUnitaire \$ / Kg", style: GoogleFonts.inter(fontSize: 12, fontWeight: FontWeight.w600)),
-                        Text("Disponible : $stockDispo Kg", style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade600)),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            _buildFieldLabel("QUANTITÉ À ACHETER (Kg)"),
-            TextFormField(
-              controller: _qteCtrl,
-              keyboardType: const TextInputType.numberWithOptions(decimal: true),
-              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
-              decoration: _inputStyle(Icons.shopping_basket_outlined, "Ex: 100"),
-              validator: (v) {
-                if (v == null || v.isEmpty) return "Saisissez une quantité";
-                final val = double.tryParse(v);
-                if (val == null || val <= 0) return "Quantité invalide";
-                if (val > stockDispo) return "Stock insuffisant";
-                return null;
-              },
-            ),
-            const SizedBox(height: 20),
-
-            _buildFieldLabel("OPÉRATEUR DE PAIEMENT"),
-            Row(
-              children: _operators.map((op) {
-                bool isSelected = _selectedOperator == op['name'];
-                return Expanded(
-                  child: GestureDetector(
-                    onTap: () => setState(() => _selectedOperator = op['name']),
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 4),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: isSelected ? op['color'].withOpacity(0.08) : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: isSelected ? op['color'] : Colors.grey.shade300, width: isSelected ? 2 : 1),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(color: primaryGreen.withOpacity(0.1), borderRadius: BorderRadius.circular(12)),
+                        child: const Icon(Icons.shopping_bag_outlined, color: primaryGreen),
                       ),
-                      child: Column(
+                      const SizedBox(width: 15),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(Icons.phone_android_rounded, color: isSelected ? op['color'] : Colors.grey, size: 20),
-                          const SizedBox(height: 4),
-                          Text(
-                            op['name'],
-                            style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold, color: isSelected ? op['color'] : Colors.black87),
-                          ),
+                          Text("Produit", style: TextStyle(color: Colors.grey.shade600, fontSize: 12)),
+                          Text(widget.produit['nom_produit'] ?? 'Produit', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                         ],
-                      ),
-                    ),
+                      )
+                    ],
                   ),
-                );
-              }).toList(),
+                ),
+                const SizedBox(height: 25),
+                const Text("Informations de livraison", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                const SizedBox(height: 15),
+                
+                // --- FORMULAIRE MODERNISÉ ---
+                _buildTextField(_nomCtrl, "Nom complet", Icons.person_outline),
+                const SizedBox(height: 15),
+                _buildTextField(_telCtrl, "Numéro de téléphone", Icons.phone_android, isPhone: true),
+                const SizedBox(height: 15),
+                _buildTextField(_qteCtrl, "Quantité souhaitée", Icons.add_circle_outline, isNumber: true),
+                
+                const SizedBox(height: 40),
+                SizedBox(
+                  width: double.infinity,
+                  height: 55,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryGreen,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => PaiementMobileScreen(
+                      produit: widget.produit,
+                      quantite: int.tryParse(_qteCtrl.text) ?? 1,
+                      infoClient: {"nom": _nomCtrl.text, "telephone": _telCtrl.text},
+                    ))),
+                    child: const Text("CONTINUER VERS LE PAIEMENT", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                )
+              ],
             ),
-            const SizedBox(height: 20),
+          ),
+    );
+  }
 
-            _buildFieldLabel("NUMÉRO DE COMPTE MOBILE MONEY (RDC)"),
-            TextFormField(
-              controller: _phoneCtrl,
-              keyboardType: TextInputType.phone,
-              style: GoogleFonts.inter(letterSpacing: 1.5, fontWeight: FontWeight.w600),
-              decoration: _inputStyle(Icons.phone_in_talk_rounded, "Ex: 08XXXXXXXX"),
-              validator: (v) {
-                if (v == null || v.trim().isEmpty) return "Numéro requis";
-                if (!RegExp(r'^0[89][0-9]{8}$').hasMatch(v.trim())) return "Format RDC invalide (10 chiffres)";
-                return null;
-              },
-            ),
-            const SizedBox(height: 35),
-
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: banGreen,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                elevation: 1,
-              ),
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  final double qte = double.parse(_qteCtrl.text);
-                  final String phone = _phoneCtrl.text.trim();
-                  widget.onSuccess(qte, phone, _selectedOperator);
-                }
-              },
-              child: Text("GÉNÉRER MA FACTURE PROFORMA", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 13)),
-            ),
-          ],
+  // Widget personnalisé pour un design uniforme
+  Widget _buildTextField(TextEditingController controller, String label, IconData icon, {bool isPhone = false, bool isNumber = false}) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: isPhone ? TextInputType.phone : (isNumber ? TextInputType.number : TextInputType.text),
+      decoration: InputDecoration(
+        labelText: label,
+        prefixIcon: Icon(icon, color: primaryGreen),
+        filled: true,
+        fillColor: Colors.white,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey.shade300),
         ),
       ),
-    );
-  }
-
-  Widget _buildFieldLabel(String text) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8, left: 4),
-      child: Text(text, style: GoogleFonts.poppins(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.blueGrey.shade700)),
-    );
-  }
-
-  InputDecoration _inputStyle(IconData icon, String hint) {
-    return InputDecoration(
-      prefixIcon: Icon(icon, color: banEarth, size: 20),
-      hintText: hint,
-      filled: true,
-      fillColor: Colors.grey.shade50,
-      contentPadding: const EdgeInsets.symmetric(vertical: 14),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade300)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: Colors.grey.shade200)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide(color: banGreen, width: 1.5)),
     );
   }
 }

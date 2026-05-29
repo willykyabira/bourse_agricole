@@ -1,288 +1,114 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class FactureProformaView extends StatefulWidget {
+class FactureProforma extends StatefulWidget {
+  final Map<String, dynamic> infoClient;
   final Map<String, dynamic> produit;
-  final double quantiteCommandee;
+  final int quantite;
+  final Map<String, dynamic> infoPaiement;
 
-  const FactureProformaView({
+  const FactureProforma({
     super.key,
+    required this.infoClient,
     required this.produit,
-    required this.quantiteCommandee,
+    required this.quantite,
+    required this.infoPaiement,
   });
 
   @override
-  State<FactureProformaView> createState() => _FactureProformaViewState();
+  State<FactureProforma> createState() => _FactureProformaState();
 }
 
-class _FactureProformaViewState extends State<FactureProformaView> {
-  bool _estEnTrainDePayer = false;
-  bool _estPaye = false;
-  String _codeRetrait = "";
+class _FactureProformaState extends State<FactureProforma> {
+  final SupabaseClient _supabase = Supabase.instance.client;
+  bool _isProcessing = false;
 
-  final Color banGreen = const Color(0xFF1B5E20);
-  final Color banGold = const Color(0xFFFBC02D);
+  Future<void> _validerCommande() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) return;
+
+    setState(() => _isProcessing = true);
+
+    try {
+      final total = (widget.produit['prix'] as num).toDouble() * widget.quantite;
+
+      // Insertion avec le user_id corrigé
+      await _supabase.from('commandes').insert({
+        'user_id': user.id,
+        'nom_client': widget.infoClient['nom'],
+        'tel': widget.infoClient['telephone'],
+        'nom_produit': widget.produit['nom_produit'],
+        'quantite': widget.quantite,
+        'prix_total': total,
+        'mode_paiement': widget.infoPaiement['mode'],
+        'statut': 'paye',
+        'created_at': DateTime.now().toIso8601String(),
+      });
+
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Commande validée avec succès !"), backgroundColor: Colors.green),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Erreur : $e"), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isProcessing = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final double prixUnitaire = double.tryParse(widget.produit['prix_unitaire'].toString()) ?? 0.0;
-    final double montantTotal = prixUnitaire * widget.quantiteCommandee;
-    final String nomProduit = (widget.produit['nom_produit'] ?? 'Produit').toString().toUpperCase();
-    final String unite = widget.produit['unite_mesure'] ?? 'Kg';
-    final String entrepot = widget.produit['nom_entrepot'] ?? widget.produit['emplacement'] ?? 'Entrepôt Central';
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text(
-          _estPaye ? "Votre Commande" : "Facture Proforma",
-          style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 18),
-        ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.black87,
-      ),
+      appBar: AppBar(title: const Text("Récapitulatif")),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Indicateur d'étape visuel
-            _buildStepProgress(),
-            const SizedBox(height: 25),
-
-            // --- CORPS DE LA FACTURE ---
-            Container(
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(15),
-                border: Border.all(color: Colors.grey.shade300),
-                boxShadow: [
-                  BoxShadow(color: Colors.black.withOpacity(0.03), blurRadius: 10, offset: const Offset(0, 5))
-                ],
-              ),
-              child: Column(
-                children: [
-                  // En-tête Facture
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: _estPaye ? banGreen : banGreen.withOpacity(0.1),
-                      borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          _estPaye ? "FACTURE DÉFINITIVE" : "FACTURE PROFORMA",
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.bold,
-                            color: _estPaye ? Colors.white : banGreen,
-                            fontSize: 14,
-                          ),
-                        ),
-                        Text(
-                          _estPaye ? "PAYÉE" : "EN ATTENTE",
-                          style: GoogleFonts.inter(
-                            fontWeight: FontWeight.w900,
-                            color: _estPaye ? banGold : Colors.orange.shade800,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Détails des articles
-                  Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildFactureRow("Produit", nomProduit, estGras: true),
-                        _buildFactureRow("Lieu de retrait", entrepot),
-                        _buildFactureRow("Quantité", "${widget.quantiteCommandee} $unite"),
-                        _buildFactureRow("Prix Unitaire", "${prixUnitaire.toStringAsFixed(2)} \$ / $unite"),
-                        const Divider(height: 30),
-                        _buildFactureRow(
-                          "Montant Total", 
-                          "${montantTotal.toStringAsFixed(2)} \$", 
-                          estGras: true, 
-                          taille: 18, 
-                          couleurTexte: banGreen
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 30),
-
-            // --- ZONE DYNAMIQUE : CODE QR OU BOUTON PAIEMENT ---
-            if (_estPaye) ...[
-              Center(
+            const Text("Détails de la commande", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
                 child: Column(
                   children: [
-                    Text(
-                      "Présentez ce code à l'entrepôt pour le retrait :",
-                      style: GoogleFonts.inter(fontSize: 13, color: Colors.grey.shade700, fontWeight: FontWeight.w500),
-                    ),
-                    const SizedBox(height: 15),
-                    // Simulation du Code QR de validation
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: banGreen, width: 2),
-                        borderRadius: BorderRadius.circular(15),
-                        color: Colors.grey.shade50,
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(Icons.qr_code_2, size: 180, color: banGreen),
-                          const SizedBox(height: 8),
-                          Text(
-                            "RÉSERVATION : $_codeRetrait",
-                            style: GoogleFonts.poppins(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.5),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      "Le stock a été bloqué avec succès à l'entrepôt.",
-                      textAlign: TextAlign.center,
-                      style: GoogleFonts.inter(color: Colors.blueGrey, fontSize: 13, fontWeight: FontWeight.w600),
-                    ),
+                    ListTile(title: Text(widget.produit['nom_produit']), subtitle: const Text("Produit")),
+                    ListTile(title: Text("${widget.quantite}"), subtitle: const Text("Quantité")),
+                    const Divider(),
+                    ListTile(
+  title: Text("${(widget.produit['prix'] as num) * widget.quantite} \$"), 
+  subtitle: const Text("Total"),
+),
                   ],
                 ),
               ),
-            ] else ...[
-              // Instructions de paiement mobile / banque
-              Text(
-                "Sélectionnez un mode de règlement ou validez pour simuler le dépôt sur le compte séquestre BAN.",
-                style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade600),
-              ),
-              const SizedBox(height: 20),
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: banGreen,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onPressed: _estEnTrainDePayer ? null : _traiterPaiementEtReservation,
-                  child: _estEnTrainDePayer
-                      ? const CircularProgressIndicator(color: Colors.white)
-                      : Text("Confirmer et Payer \$${montantTotal.toStringAsFixed(2)}", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 15)),
+            ),
+            const SizedBox(height: 40),
+            SizedBox(
+              width: double.infinity,
+              height: 55,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 ),
+                onPressed: _isProcessing ? null : _validerCommande,
+                child: _isProcessing 
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text("CONFIRMER LE PAIEMENT", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
               ),
-            ],
+            ),
           ],
         ),
       ),
     );
-  }
-
-  Widget _buildFactureRow(String label, String valeur, {bool estGras = false, double taille = 14, Color? couleurTexte}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: GoogleFonts.inter(fontSize: 13, color: Colors.grey.shade600)),
-          Expanded(
-            child: Text(
-              valeur,
-              textAlign: TextAlign.end,
-              style: GoogleFonts.poppins(
-                fontSize: taille,
-                fontWeight: estGras ? FontWeight.bold : FontWeight.w500,
-                color: couleurTexte ?? Colors.black87,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStepProgress() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _buildStepCircle("1", "Proforma", active: true, complete: _estPaye),
-        _buildLine(complete: _estPaye),
-        _buildStepCircle("2", "Paiement / QR", active: _estPaye, complete: _estPaye),
-        _buildLine(complete: false),
-        _buildStepCircle("3", "Livraison", active: false, complete: false),
-      ],
-    );
-  }
-
-  Widget _buildStepCircle(String step, String label, {required bool active, required bool complete}) {
-    return Column(
-      children: [
-        CircleAvatar(
-          radius: 16,
-          backgroundColor: complete ? banGreen : (active ? banGold : Colors.grey.shade300),
-          child: complete 
-              ? const Icon(Icons.check, size: 16, color: Colors.white) 
-              : Text(step, style: TextStyle(color: active ? Colors.black87 : Colors.grey, fontSize: 12, fontWeight: FontWeight.bold)),
-        ),
-        const SizedBox(height: 4),
-        Text(label, style: GoogleFonts.inter(fontSize: 10, fontWeight: active || complete ? FontWeight.bold : FontWeight.normal)),
-      ],
-    );
-  }
-
-  Widget _buildLine({required bool complete}) {
-    return Container(
-      width: 40,
-      height: 2,
-      margin: const EdgeInsets.only(left: 8, right: 8, bottom: 15),
-      color: complete ? banGreen : Colors.grey.shade300,
-    );
-  }
-
-  // Action de simulation du passage Proforma ➔ Paiement ➔ Réservation Stock
-  void _traiterPaiementEtReservation() async {
-    setState(() => _estEnTrainDePayer = true);
-
-    // Simulation d'une latence réseau de 2 secondes
-    await Future.delayed(const Duration(seconds: 2));
-
-    // Génération d'un code de retrait fictif basé sur le timestamp
-    final String tokenRetrait = "BAN-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}";
-
-    try {
-      final supabase = Supabase.instance.client;
-      final user = supabase.auth.currentUser;
-
-      // Insertion de la transaction finalisée dans Supabase
-      await supabase.from('commandes').insert({
-        'acheteur_id': user?.id,
-        'produit_id': widget.produit['id'],
-        'quantite': widget.quantiteCommandee,
-        'prix_total': (double.parse(widget.produit['prix_unitaire'].toString()) * widget.quantiteCommandee),
-        'code_qr_validation': tokenRetrait,
-        'statut': 'paye', // Statut passé à PAYÉ
-      });
-
-      setState(() {
-        _estEnTrainDePayer = false;
-        _estPaye = true;
-        _codeRetrait = tokenRetrait;
-      });
-    } catch (e) {
-      setState(() => _estEnTrainDePayer = false);
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Erreur lors de la validation : $e"), backgroundColor: Colors.red),
-        );
-      }
-    }
   }
 }
