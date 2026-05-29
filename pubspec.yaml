@@ -22,6 +22,12 @@ dependencies:
   # --- BACKEND ---
   supabase_flutter: ^2.12.2
   go_router: ^17.2.1
+  flutter_dotenv: ^6.0.1
+  get_it: ^9.2.1
+  google_fonts: ^8.1.0
+  flutter_bloc: ^9.1.1
+  equatable: ^2.0.8
+  qr_flutter: ^4.1.0
 
 dev_dependencies:
   flutter_test:
@@ -31,4 +37,4 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/images/logo_ban.png
+    - .env

@@ -1,18 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'features/auth/screens/ecran_connexion.dart';
+import 'package:bourse_agricole/dependency_injection.dart' as di;
+
+// Imports de tes pages
+import 'package:bourse_agricole/features/presentation/pages/connexion.dart';
+import 'package:bourse_agricole/features/presentation/pages/creer_compte.dart';
+import 'package:bourse_agricole/features/presentation/pages/page_accueil_client.dart';
 
 void main() async {
-  // 1. Assure l'initialisation des widgets Flutter
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 2. Initialisation de Supabase (remplacez par vos vraies clés)
-  await Supabase.initialize(
-    url: 'https://djrywiufzvpuybkzqlow.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRqcnl3aXVmenZwdXlia3pxbG93Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzNjU5NTIsImV4cCI6MjA4MDk0MTk1Mn0.1I1qDV59WJrQ-dNHRLgASxlB2kMQxm5ZXzZTGQKI1Gw',
-  );
+  try {
+    // 1. Chargement config
+    await dotenv.load(fileName: ".env");
 
-  runApp(const MyApp());
+    // 2. Initialisation Base de données
+// DANS VOTRE main.dart
+// 2. Initialisation Base de données
+    await Supabase.initialize(
+      // On donne le NOM de la variable définie dans le fichier .env
+      url: dotenv.get("SUPABASE_URL"), 
+      anonKey: dotenv.get("SUPABASE_ANON_KEY"), 
+    );
+
+    // 3. Initialisation Injections (Blocs, Repos)
+    await di.init();
+
+    runApp(const MyApp());
+  } catch (e) {
+    // Si ça plante ici, on affiche l'erreur en gros sur l'écran
+    runApp(MaterialApp(
+      home: Scaffold(
+        body: Center(child: Text("ERREUR DE DÉMARRAGE :\n$e", textAlign: TextAlign.center, style: const TextStyle(color: Colors.red))),
+      ),
+    ));
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -21,22 +44,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'BAN Portal',
       debugShowCheckedModeBanner: false,
-      
-      // --- THÈME COULEUR BAN ---
+      title: 'BAN ITURI',
       theme: ThemeData(
-        primaryColor: const Color(0xFF1B5E20),
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF1B5E20),
-          primary: const Color(0xFF1B5E20),
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF1B5E20)),
         useMaterial3: true,
-        fontFamily: 'Roboto', // Ou votre police préférée
       ),
-
-      // 3. Point d'entrée : l'écran de Login que vous avez corrigé
-      home: const EcranConnexion(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const EcranConnexionClient(),
+        '/inscription': (context) => const CreationCompte(),
+        '/accueil': (context) => const PageAccueilClient(role: 'Acheteur'),
+      },
     );
   }
 }
