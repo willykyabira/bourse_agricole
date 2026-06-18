@@ -38,7 +38,7 @@ class _OngletAccueilState extends State<OngletAccueil> {
 
     return Column(
       children: [
-        // 1. BARRE DE RECHERCHE DYNAMIQUE (Globale)
+        // 1. BARRE DE RECHERCHE DYNAMIQUE
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Container(
@@ -70,7 +70,7 @@ class _OngletAccueilState extends State<OngletAccueil> {
           ),
         ),
 
-        // Corps de la page défilant
+        // Corps de la page
         Expanded(
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -81,25 +81,19 @@ class _OngletAccueilState extends State<OngletAccueil> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(
-                    "Catégories",
-                    style: GoogleFonts.poppins(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.black87),
-                  ),
+                  Text("Catégories", style: GoogleFonts.poppins(fontSize: 17, fontWeight: FontWeight.bold)),
                   if (_selectedCategory != "Tous" || _searchQuery.isNotEmpty)
                     TextButton(
                       onPressed: () {
                         _searchCtrl.clear();
-                        setState(() {
-                          _selectedCategory = "Tous";
-                          _searchQuery = "";
-                        });
+                        setState(() { _selectedCategory = "Tous"; _searchQuery = ""; });
                       },
                       child: Text("Réinitialiser", style: TextStyle(color: banGold, fontWeight: FontWeight.bold)),
                     ),
                 ],
               ),
               const SizedBox(height: 10),
-              
+
               SizedBox(
                 height: 95,
                 child: ListView.builder(
@@ -108,64 +102,44 @@ class _OngletAccueilState extends State<OngletAccueil> {
                   itemBuilder: (context, index) {
                     final cat = _categories[index];
                     final bool isSelected = _searchQuery.isEmpty && (_selectedCategory == cat['name']);
-                    return _buildCategoryCircle(
-                      cat['name'],
-                      cat['icon'],
-                      isSelected ? banGold : banGreen,
-                      isSelected,
-                    );
+                    return _buildCategoryCircle(cat['name'], cat['icon'], isSelected ? banGold : banGreen, isSelected);
                   },
                 ),
               ),
 
               const SizedBox(height: 25),
 
-              // 3. OFFRES DU MARCHÉ EN TEMPS RÉEL
+              // 3. TITRE
               Text(
-                _searchQuery.isNotEmpty 
-                    ? "Résultats pour : '$_searchQuery'"
-                    : (_selectedCategory == "Tous" ? "Offres du Marché" : "Offres : $_selectedCategory"),
-                style: GoogleFonts.poppins(fontSize: 17, fontWeight: FontWeight.bold, color: Colors.black87),
+                _searchQuery.isNotEmpty ? "Résultats pour : '$_searchQuery'" : (_selectedCategory == "Tous" ? "Offres du Marché" : "Offres : $_selectedCategory"),
+                style: GoogleFonts.poppins(fontSize: 17, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 15),
 
               StreamBuilder<List<Map<String, dynamic>>>(
                 stream: supabase.from('produits').stream(primaryKey: ['id']).order('created_at', ascending: false),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return Center(child: CircularProgressIndicator(color: banGreen));
-                  }
+                  if (snapshot.connectionState == ConnectionState.waiting) return Center(child: CircularProgressIndicator(color: banGreen));
                   
                   final allProducts = snapshot.data ?? [];
 
-                  // Filtrage intelligent
                   final filteredProducts = allProducts.where((p) {
                     final String nomProduit = (p['nom_produit'] ?? '').toString().toLowerCase();
-                    final String catProduit = (p['categorie'] ?? '').toString().toLowerCase();
                     
+                    // --- CORRECTION ICI : Utilisation de 'nom_categorie' ---
+                    final String catProduit = (p['nom_categorie'] ?? '').toString().trim().toLowerCase();
+                    final String catSelectionnee = _selectedCategory.trim().toLowerCase();
+
                     if (_searchQuery.isNotEmpty) {
                       return nomProduit.contains(_searchQuery);
                     } else {
-                      return _selectedCategory == "Tous" || catProduit == _selectedCategory.toLowerCase();
+                      if (_selectedCategory == "Tous") return true;
+                      return catProduit == catSelectionnee;
                     }
                   }).toList();
 
                   if (filteredProducts.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 40),
-                      child: Center(
-                        child: Column(
-                          children: [
-                            Icon(Icons.layers_clear_outlined, color: Colors.grey, size: 40),
-                            const SizedBox(height: 8),
-                            Text(
-                              "Aucun produit disponible.",
-                              style: GoogleFonts.inter(color: Colors.grey, fontSize: 13),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
+                    return Padding(padding: const EdgeInsets.symmetric(vertical: 40), child: Center(child: Text("Aucun produit disponible.")));
                   }
 
                   return ListView.builder(
@@ -174,30 +148,21 @@ class _OngletAccueilState extends State<OngletAccueil> {
                     itemCount: filteredProducts.length,
                     itemBuilder: (context, index) {
                       final p = filteredProducts[index];
-                      
+                      // Ajustement pour les noms de colonnes
                       final String nom = (p['nom_produit'] ?? 'Produit').toString().toUpperCase();
                       final double qte = double.tryParse(p['quantite'].toString()) ?? 0.0;
                       final double pu = double.tryParse(p['prix_unitaire'].toString()) ?? 0.0;
-                      final String entrepot = p['nom_entrepot'] ?? p['emplacement'] ?? 'Entrepôt central';
+                      final String entrepot = p['nom_entrepot'] ?? 'Entrepôt central';
                       final String unite = p['unite_mesure'] ?? 'Kg';
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: _buildProductCard(
-                          nom,
-                          qte,
-                          pu,
-                          unite,
-                          entrepot,
-                          Icons.eco,
-                          banGreen,
-                        ),
+                        child: _buildProductCard(nom, qte, pu, unite, entrepot, Icons.eco, banGreen),
                       );
                     },
                   );
                 },
               ),
-              const SizedBox(height: 30),
             ],
           ),
         ),
@@ -207,35 +172,18 @@ class _OngletAccueilState extends State<OngletAccueil> {
 
   Widget _buildCategoryCircle(String label, IconData icon, Color color, bool isSelected) {
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          _searchCtrl.clear();
-          _searchQuery = "";
-          _selectedCategory = label;
-        });
-      },
+      onTap: () => setState(() { _searchCtrl.clear(); _searchQuery = ""; _selectedCategory = label; }),
       child: Padding(
         padding: const EdgeInsets.only(right: 20),
         child: Column(
           children: [
             Container(
               padding: const EdgeInsets.all(15),
-              decoration: BoxDecoration(
-                color: color.withOpacity(isSelected ? 0.2 : 0.1),
-                shape: BoxShape.circle,
-                border: isSelected ? Border.all(color: color, width: 2) : null,
-              ),
+              decoration: BoxDecoration(color: color.withOpacity(isSelected ? 0.2 : 0.1), shape: BoxShape.circle, border: isSelected ? Border.all(color: color, width: 2) : null),
               child: Icon(icon, color: color, size: 26),
             ),
             const SizedBox(height: 6),
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontSize: 11, 
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                color: isSelected ? color : Colors.black87,
-              ),
-            ),
+            Text(label, style: GoogleFonts.poppins(fontSize: 11, fontWeight: isSelected ? FontWeight.bold : FontWeight.w500, color: isSelected ? color : Colors.black87)),
           ],
         ),
       ),
@@ -245,68 +193,17 @@ class _OngletAccueilState extends State<OngletAccueil> {
   Widget _buildProductCard(String title, double quantite, double prixUnitaire, String unite, String entrepot, IconData icon, Color color) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 4))
-        ],
-      ),
+      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey[200]!)),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color, size: 26),
-          ),
+          Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color, size: 26)),
           const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14, color: Colors.black87),
-                ),
-                const SizedBox(height: 2),
-                Row(
-                  children: [
-                    Icon(Icons.store_mall_directory_outlined, size: 13, color: Colors.grey.shade600),
-                    const SizedBox(width: 4),
-                    Expanded(
-                      child: Text(
-                        entrepot,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade600),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  "Stock dispo : $quantite $unite",
-                  style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.w600, color: Colors.blueGrey.shade700),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                "${prixUnitaire.toStringAsFixed(2)} \$",
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w800, color: banGreen, fontSize: 15),
-              ),
-              Text(
-                "/ $unite",
-                style: GoogleFonts.inter(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
+          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14)),
+            Text("Entrepôt : $entrepot", style: GoogleFonts.inter(fontSize: 12, color: Colors.grey)),
+            Text("Stock : $quantite $unite", style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold)),
+          ])),
+          Text("${prixUnitaire.toStringAsFixed(2)}\$", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: banGreen)),
         ],
       ),
     );

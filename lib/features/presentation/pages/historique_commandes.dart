@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:pdf/widgets.dart' as pw;
+
+import 'package:pdf/pdf.dart';
+
+import 'package:printing/printing.dart';
+
+import 'package:barcode_widget/barcode_widget.dart';
 
 class HistoriquePage extends StatefulWidget {
   const HistoriquePage({super.key});
@@ -13,112 +22,319 @@ class _HistoriquePageState extends State<HistoriquePage> {
 
   @override
   Widget build(BuildContext context) {
+    final user = _supabase.auth.currentUser;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
+
       appBar: AppBar(
-        title: const Text("Historique des achats", style: TextStyle(fontWeight: FontWeight.bold)),
-        elevation: 0,
+        title: const Text(
+          "Mon Historique",
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+
         backgroundColor: Colors.white,
+
         foregroundColor: Colors.black,
-      ),
-      body: StreamBuilder<List<Map<String, dynamic>>>(
-        // On récupère les commandes de l'utilisateur connecté
-        stream: _supabase
-            .from('commandes')
-            .stream(primaryKey: ['id'])
-            .eq('user_id', _supabase.auth.currentUser!.id)
-            .order('created_at', ascending: false),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return _buildEmptyState();
-          }
 
-          final commandes = snapshot.data!;
-          return ListView.builder(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-            itemCount: commandes.length,
-            itemBuilder: (context, index) {
-              return _CommandeCard(item: commandes[index]);
-            },
-          );
-        },
+        elevation: 1,
       ),
-    );
-  }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.receipt_long, size: 80, color: Colors.grey[300]),
-          const SizedBox(height: 20),
-          const Text("Aucun historique", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.grey)),
-        ],
-      ),
+      body: user == null
+          ? const Center(
+              child: Text("Veuillez vous connecter pour voir vos achats."),
+            )
+          : StreamBuilder<List<Map<String, dynamic>>>(
+              stream: _supabase
+                  .from('commandes')
+                  .stream(primaryKey: ['id'])
+                  .eq('user_id', user.id)
+                  .order('created_at', ascending: false),
+
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (snapshot.hasError)
+                  return Center(child: Text("Erreur : ${snapshot.error}"));
+
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(
+                    child: Text("Aucun achat trouvé sur ce compte."),
+                  );
+                }
+
+                final commandes = snapshot.data!;
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+
+                  itemCount: commandes.length,
+
+                  itemBuilder: (context, index) =>
+                      _CommandeCard(item: commandes[index]),
+                );
+              },
+            ),
     );
   }
 }
 
-// Widget de la carte avec expansion pour les détails
 class _CommandeCard extends StatelessWidget {
   final Map<String, dynamic> item;
+
   const _CommandeCard({required this.item});
+
+  Future<void> _printFacture() async {
+    // --- DÉBOGAGE : AFFICHE LES DONNÉES RÉELLES DANS LA CONSOLE ---
+
+    debugPrint("DEBUG - Contenu complet de l'objet item : $item");
+
+    final pdf = pw.Document();
+
+    final supabase = Supabase.instance.client;
+
+    String telephone = "Non disponible";
+
+    final String? lieu = item['lieu_retrait'];
+
+    if (lieu != null && lieu.isNotEmpty) {
+      try {
+        final data = await supabase
+            .from('entrepots')
+            .select('telephone')
+            .eq('nom', lieu)
+            .maybeSingle();
+
+        if (data != null && data['telephone'] != null) {
+          telephone = data['telephone'];
+        }
+      } catch (e) {
+        debugPrint("Erreur récupération téléphone : $e");
+      }
+    }
+
+    final double totalTtc = (item['prix_total'] as num?)?.toDouble() ?? 0.0;
+
+    final int qty = (item['quantite'] as num?)?.toInt() ?? 1;
+
+    final double unitPrice = qty > 0 ? (totalTtc / qty) : 0.0;
+
+    final double tva = (item['montant_tva'] as num?)?.toDouble() ?? 0.0;
+
+    final double transport =
+        (item['frais_transport'] as num?)?.toDouble() ?? 0.0;
+
+    final double manutention =
+        (item['frais_manutention'] as num?)?.toDouble() ?? 0.0;
+
+    final double commission = (item['commission'] as num?)?.toDouble() ?? 0.0;
+
+    final double totalHt =
+        totalTtc - tva - transport - manutention - commission;
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+
+            children: [
+              pw.Row(
+                mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+
+                children: [
+                  pw.Column(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
+                    children: [
+                      pw.Text(
+                        "BAN ITURI",
+                        style: pw.TextStyle(
+                          fontSize: 18,
+                          fontWeight: pw.FontWeight.bold,
+                        ),
+                      ),
+
+                      pw.Text(
+                        "RCCM : CD/GOM/RCCM/XX-XXXX",
+                        style: const pw.TextStyle(fontSize: 9),
+                      ),
+
+                      pw.Text(
+                        "ID NAT : X-XX-XXXXX-X",
+                        style: const pw.TextStyle(fontSize: 9),
+                      ),
+
+                      pw.Text(
+                        "NIF : AXXXXXXXXX",
+                        style: const pw.TextStyle(fontSize: 9),
+                      ),
+
+                      pw.Text(
+                        "Adresse : Goma, Nord-Kivu, RDC",
+                        style: const pw.TextStyle(fontSize: 9),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+
+              pw.Divider(),
+
+              pw.Text(
+                "FACTURE PROFORMA",
+                style: pw.TextStyle(
+                  fontSize: 24,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+
+              pw.Text(
+                "Facture N°: FAC-${item['id']?.toString().substring(0, 8) ?? 'XXXX'}",
+              ),
+
+              pw.Text(
+                "Date: ${item['created_at']?.toString().substring(0, 10) ?? 'N/A'}",
+              ),
+
+              pw.Text("Client: ${item['nom_client'] ?? 'N/A'}"),
+
+              pw.SizedBox(height: 20),
+
+              pw.Table.fromTextArray(
+                headers: ["Désignation", "Qté", "P.U", "Total"],
+
+                data: [
+                  [
+                    item['nom_produit'] ?? 'Produit',
+
+                    qty.toString(),
+
+                    "${unitPrice.toStringAsFixed(2)} \$",
+
+                    "${totalTtc.toStringAsFixed(2)} \$",
+                  ],
+                ],
+
+                border: pw.TableBorder.all(),
+
+                headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+              ),
+
+              pw.SizedBox(height: 20),
+
+              _buildPdfRow("Transport (3%)", transport),
+
+              _buildPdfRow("Manutention (1%)", manutention),
+
+              _buildPdfRow("Commission (5%)", commission),
+
+              pw.Divider(),
+
+              _buildPdfRow("TOTAL HT", totalHt),
+
+              _buildPdfRow("TVA (16%)", tva),
+
+              pw.Divider(),
+
+              _buildPdfRow("NET À PAYER (TTC)", totalTtc, isBold: true),
+
+              pw.SizedBox(height: 20),
+
+              pw.Divider(),
+
+              pw.Text(
+                "Lieu de retrait: ${item['lieu_retrait'] ?? 'Non spécifié'}",
+              ),
+
+              pw.Text("Téléphone de l'entrepôt: $telephone"),
+
+              pw.Text(
+                "Échéance de retrait: ${item['echeance_retrait'] ?? 'Non spécifiée'}",
+              ),
+
+              pw.Spacer(),
+
+              pw.Center(
+                child: pw.BarcodeWidget(
+                  barcode: pw.Barcode.qrCode(),
+
+                  data: "CMD-${item['id']}",
+
+                  width: 80,
+
+                  height: 80,
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+
+    await Printing.layoutPdf(onLayout: (format) => pdf.save());
+  }
+
+  pw.Widget _buildPdfRow(String label, double value, {bool isBold = false}) =>
+      pw.Padding(
+        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+
+        child: pw.Row(
+          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+
+          children: [
+            pw.Text(
+              label,
+              style: pw.TextStyle(
+                fontWeight: isBold ? pw.FontWeight.bold : pw.FontWeight.normal,
+              ),
+            ),
+
+            pw.Text("${value.toStringAsFixed(2)} \$"),
+          ],
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
-    final prix = (item['prix_total'] as num?)?.toDouble() ?? 0.0;
-    
-    return Container(
+    return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 8, offset: const Offset(0, 4)),
-        ],
-      ),
+
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+
       child: ExpansionTile(
-        tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        leading: CircleAvatar(
-          backgroundColor: Colors.blueAccent.withOpacity(0.1),
-          child: const Icon(Icons.shopping_bag, color: Colors.blueAccent),
+        title: Text(
+          item['nom_produit'] ?? 'Produit',
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        title: Text(item['nom_produit'] ?? 'Produit inconnu', style: const TextStyle(fontWeight: FontWeight.bold)),
-        subtitle: Text("${prix.toStringAsFixed(2)} \$ • ${item['statut'] ?? 'Payé'}"),
+
+        subtitle: Text(
+          "${item['prix_total'] ?? 0} \$ - ${item['statut'] ?? 'Payé'}",
+        ),
+
+        trailing: IconButton(
+          icon: const Icon(Icons.print, color: Colors.blue),
+
+          onPressed: _printFacture,
+
+          tooltip: "Imprimer la facture",
+        ),
+
         children: [
-          const Divider(height: 1),
           Padding(
             padding: const EdgeInsets.all(16.0),
+
             child: Column(
               children: [
-                _buildDetailRow("Client", item['nom_client'] ?? 'Non renseigné'),
-                _buildDetailRow("Téléphone", item['tel'] ?? 'Non renseigné'),
-                _buildDetailRow("Quantité", "${item['quantite'] ?? 0}"),
-                _buildDetailRow("Mode de paiement", item['mode_paiement'] ?? 'N/A'),
-                _buildDetailRow("Date", item['created_at'] != null 
-                    ? item['created_at'].toString().substring(0, 10) 
-                    : 'N/A'),
+                ListTile(title: Text("Client: ${item['nom_client'] ?? 'N/A'}")),
+
+                ListTile(title: Text("Lieu: ${item['lieu_retrait'] ?? 'N/A'}")),
               ],
             ),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: TextStyle(color: Colors.grey[600], fontSize: 14)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
         ],
       ),
     );

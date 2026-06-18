@@ -56,15 +56,34 @@ class _FactureProformaState extends State<FactureProforma> {
   Future<void> _sauvegarder() async {
     setState(() => _isProcessing = true);
     try {
+      // Insertion complète pour correspondre aux contraintes BDD et aux besoins du Dashboard
       await _supabase.from('commandes').insert({
         'nom_client': widget.infoClient['nom'] ?? 'Client Anonyme',
-        'prix_total': _calc.totalTtc,
         'nom_produit': widget.produit['nom_produit'] ?? 'Produit',
+        'quantite': widget.quantite, // Correction ici
+        'prix_total': _calc.totalTtc,
+        'statut': 'proforma', // Statut par défaut
+        
+        // Champs nécessaires pour vos calculs financiers dans le dashboard
+        'frais_transport': _calc.fraisTransport,
+        'frais_manutention': _calc.manutention,
+        'frais_stockage': _calc.stockage,
+        'commission': _calc.commission,
+        'montant_tva': _calc.tva,
+        
         'created_at': DateTime.now().toIso8601String(),
       });
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Sauvegardé avec succès !")));
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Commande enregistrée !"), backgroundColor: Colors.green)
+        );
+        Navigator.pop(context); // Retour arrière après succès
+      }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Erreur BDD: $e")));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Erreur BDD: $e"), backgroundColor: Colors.red));
+      }
     } finally {
       if (mounted) setState(() => _isProcessing = false);
     }
@@ -129,7 +148,7 @@ class _FactureProformaState extends State<FactureProforma> {
                         padding: const EdgeInsets.all(20),
                         child: Column(
                           children: [
-                            Text("Détail Facturation", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                            const Text("Détail Facturation", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
                             const Divider(),
                             _buildRow("Produit", widget.produit['nom_produit'] ?? 'N/A', isCurrency: false),
                             _buildRow("Prix Unitaire", _calc.prixUnitaire),
