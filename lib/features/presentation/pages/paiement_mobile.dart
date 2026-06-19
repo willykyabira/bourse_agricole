@@ -55,6 +55,7 @@ class _PaiementMobileScreenState extends State<PaiementMobileScreen> {
                       decoration: BoxDecoration(color: Colors.grey.shade100, borderRadius: BorderRadius.circular(12)),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButtonFormField<String>(
+                          // ignore: deprecated_member_use
                           value: _selectedOperator,
                           isExpanded: true,
                           decoration: const InputDecoration(border: InputBorder.none, prefixIcon: Icon(Icons.account_balance_wallet_outlined, color: Color(0xFF1B5E20))),

@@ -131,8 +131,10 @@ class _OngletVentesState extends State<OngletVentes> {
           Container(
             padding: const EdgeInsets.all(15),
             decoration: BoxDecoration(
+              // ignore: deprecated_member_use
               color: banGreen.withOpacity(0.05),
               borderRadius: BorderRadius.circular(12),
+              // ignore: deprecated_member_use
               border: Border.all(color: banGreen.withOpacity(0.15)),
             ),
             child: Row(
@@ -249,6 +251,7 @@ class _OngletVentesState extends State<OngletVentes> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
+          // ignore: deprecated_member_use
           BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 10, offset: const Offset(0, 4))
         ],
       ),

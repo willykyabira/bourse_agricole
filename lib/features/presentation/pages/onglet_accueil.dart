@@ -179,6 +179,7 @@ class _OngletAccueilState extends State<OngletAccueil> {
           children: [
             Container(
               padding: const EdgeInsets.all(15),
+              // ignore: deprecated_member_use
               decoration: BoxDecoration(color: color.withOpacity(isSelected ? 0.2 : 0.1), shape: BoxShape.circle, border: isSelected ? Border.all(color: color, width: 2) : null),
               child: Icon(icon, color: color, size: 26),
             ),
@@ -196,6 +197,7 @@ class _OngletAccueilState extends State<OngletAccueil> {
       decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey[200]!)),
       child: Row(
         children: [
+          // ignore: deprecated_member_use
           Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color, size: 26)),
           const SizedBox(width: 14),
           Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [

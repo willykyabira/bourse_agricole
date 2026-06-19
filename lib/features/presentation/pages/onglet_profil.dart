@@ -26,6 +26,7 @@ class OngletProfil extends StatelessWidget {
             border: Border.all(color: const Color(0xFFD1D9D1)), 
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
+              // ignore: deprecated_member_use
               BoxShadow(color: Colors.black.withOpacity(0.01), blurRadius: 6, offset: const Offset(0, 3))
             ],
           ),

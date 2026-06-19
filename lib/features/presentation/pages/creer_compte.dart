@@ -133,6 +133,7 @@ class _CreationCompteState extends State<CreationCompte> {
         hintText: "Mot de passe",
         prefixIcon: const Icon(Icons.lock_outline, color: banPurpleBottom),
         suffixIcon: IconButton(
+          // ignore: deprecated_member_use
           icon: Icon(_obscureText ? Icons.visibility_off : Icons.visibility, color: banPurpleBottom.withOpacity(0.6)),
           onPressed: () => setState(() => _obscureText = !_obscureText),
         ),

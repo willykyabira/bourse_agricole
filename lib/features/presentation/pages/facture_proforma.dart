@@ -100,6 +100,7 @@ class _FactureProformaState extends State<FactureProforma> {
           pw.Text("Facture N°: $_numFacture | Date: $_dateFacture"),
           pw.Text("Client: ${widget.infoClient['nom'] ?? 'N/A'}"),
           pw.SizedBox(height: 20),
+          // ignore: deprecated_member_use
           pw.Table.fromTextArray(
             headers: ["Désignation", "Qté", "P.U", "Total"],
             data: [[widget.produit['nom_produit'] ?? 'Produit', widget.quantite.toString(), _calc.prixUnitaire.toStringAsFixed(2), _calc.prixBase.toStringAsFixed(2)]],

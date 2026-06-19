@@ -192,6 +192,7 @@ class _PageAccueilClientState extends State<PageAccueilClient> {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
+            // ignore: deprecated_member_use
             color: Colors.black.withOpacity(0.06),
             blurRadius: 15,
             offset: const Offset(0, -5),
