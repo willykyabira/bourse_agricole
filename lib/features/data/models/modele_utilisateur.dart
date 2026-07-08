@@ -1,11 +1,23 @@
-// lib/data/models/modele_utilisateur.dart
+// Modèle représentant un utilisateur de l'application.
 
-enum UserRole { admin, acheteur, vendeur }
+/// Les différents rôles disponibles.
+enum UserRole {
+  admin,
+  acheteur,
+  vendeur,
+}
 
 class UserModel {
+  /// Identifiant unique de l'utilisateur.
   final String id;
+
+  /// Nom complet.
   final String nomComplet;
+
+  /// Adresse e-mail.
   final String email;
+
+  /// Rôle de l'utilisateur.
   final UserRole role;
 
   UserModel({

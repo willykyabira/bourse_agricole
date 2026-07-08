@@ -1,17 +1,28 @@
 import 'package:bourse_agricole/features/domain/repositories/auth_repository.dart';
 
+/// Cas d'utilisation permettant de connecter un utilisateur.
 class Authentifier {
   final AuthRepository repository;
-  Authentifier({required this.repository});
 
-  Future<void> call(String email, String motDePasse) async {
-    return await repository.signIn(email: email, password: motDePasse);
+  Authentifier({
+    required this.repository,
+  });
+
+  Future<void> call(String email, String motDePasse) {
+    return repository.signIn(
+      email: email,
+      password: motDePasse,
+    );
   }
 }
 
+/// Cas d'utilisation permettant de créer un nouveau compte.
 class Enregistrer {
   final AuthRepository repository;
-  Enregistrer({required this.repository});
+
+  Enregistrer({
+    required this.repository,
+  });
 
   Future<void> call({
     required String email,
@@ -19,8 +30,8 @@ class Enregistrer {
     required String nom,
     required String telephone,
     required String role,
-  }) async {
-    return await repository.signUp(
+  }) {
+    return repository.signUp(
       email: email,
       password: password,
       nom: nom,

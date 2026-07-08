@@ -10,13 +10,17 @@ class OngletAccueil extends StatefulWidget {
 }
 
 class _OngletAccueilState extends State<OngletAccueil> {
+  // Contrôleur de la barre de recherche
   final TextEditingController _searchCtrl = TextEditingController();
+
   String _searchQuery = "";
   String _selectedCategory = "Tous";
 
+  // Couleurs principales de l'application
   final Color banGreen = const Color(0xFF1B5E20);
   final Color banGold = const Color(0xFFFBC02D);
 
+  // Liste des catégories disponibles
   final List<Map<String, dynamic>> _categories = [
     {"name": "Tous", "icon": Icons.grid_view},
     {"name": "Tubercules", "icon": Icons.agriculture},
@@ -38,7 +42,7 @@ class _OngletAccueilState extends State<OngletAccueil> {
 
     return Column(
       children: [
-        // 1. BARRE DE RECHERCHE DYNAMIQUE
+        // Barre de recherche
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
           child: Container(
@@ -49,10 +53,17 @@ class _OngletAccueilState extends State<OngletAccueil> {
             ),
             child: TextField(
               controller: _searchCtrl,
-              onChanged: (val) => setState(() => _searchQuery = val.trim().toLowerCase()),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value.trim().toLowerCase();
+                });
+              },
               decoration: InputDecoration(
                 hintText: "Rechercher un produit (Manioc, Maïs...)",
-                hintStyle: GoogleFonts.poppins(fontSize: 13, color: Colors.grey),
+                hintStyle: GoogleFonts.poppins(
+                  fontSize: 13,
+                  color: Colors.grey,
+                ),
                 prefixIcon: Icon(Icons.search, color: banGreen),
                 suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
@@ -70,28 +81,45 @@ class _OngletAccueilState extends State<OngletAccueil> {
           ),
         ),
 
-        // Corps de la page
+        // Contenu principal
         Expanded(
           child: ListView(
             padding: const EdgeInsets.symmetric(horizontal: 20),
             children: [
               const SizedBox(height: 15),
 
-              // 2. SECTION CATÉGORIES
+              // Catégories
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text("Catégories", style: GoogleFonts.poppins(fontSize: 17, fontWeight: FontWeight.bold)),
+                  Text(
+                    "Catégories",
+                    style: GoogleFonts.poppins(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   if (_selectedCategory != "Tous" || _searchQuery.isNotEmpty)
                     TextButton(
                       onPressed: () {
                         _searchCtrl.clear();
-                        setState(() { _selectedCategory = "Tous"; _searchQuery = ""; });
+
+                        setState(() {
+                          _selectedCategory = "Tous";
+                          _searchQuery = "";
+                        });
                       },
-                      child: Text("Réinitialiser", style: TextStyle(color: banGold, fontWeight: FontWeight.bold)),
+                      child: Text(
+                        "Réinitialiser",
+                        style: TextStyle(
+                          color: banGold,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                 ],
               ),
+
               const SizedBox(height: 10),
 
               SizedBox(
@@ -100,46 +128,85 @@ class _OngletAccueilState extends State<OngletAccueil> {
                   scrollDirection: Axis.horizontal,
                   itemCount: _categories.length,
                   itemBuilder: (context, index) {
-                    final cat = _categories[index];
-                    final bool isSelected = _searchQuery.isEmpty && (_selectedCategory == cat['name']);
-                    return _buildCategoryCircle(cat['name'], cat['icon'], isSelected ? banGold : banGreen, isSelected);
+                    final categorie = _categories[index];
+
+                    final bool isSelected =
+                        _searchQuery.isEmpty &&
+                        _selectedCategory == categorie['name'];
+
+                    return _buildCategoryCircle(
+                      categorie['name'],
+                      categorie['icon'],
+                      isSelected ? banGold : banGreen,
+                      isSelected,
+                    );
                   },
                 ),
               ),
 
               const SizedBox(height: 25),
 
-              // 3. TITRE
+              // Titre de la liste
               Text(
-                _searchQuery.isNotEmpty ? "Résultats pour : '$_searchQuery'" : (_selectedCategory == "Tous" ? "Offres du Marché" : "Offres : $_selectedCategory"),
-                style: GoogleFonts.poppins(fontSize: 17, fontWeight: FontWeight.bold),
+                _searchQuery.isNotEmpty
+                    ? "Résultats pour : '$_searchQuery'"
+                    : (_selectedCategory == "Tous"
+                          ? "Offres du Marché"
+                          : "Offres : $_selectedCategory"),
+                style: GoogleFonts.poppins(
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
+
               const SizedBox(height: 15),
 
+              // Chargement des produits depuis Supabase
               StreamBuilder<List<Map<String, dynamic>>>(
-                stream: supabase.from('produits').stream(primaryKey: ['id']).order('created_at', ascending: false),
+                stream: supabase
+                    .from('produits')
+                    .stream(primaryKey: ['id'])
+                    .order('created_at', ascending: false),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) return Center(child: CircularProgressIndicator(color: banGreen));
-                  
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(
+                      child: CircularProgressIndicator(color: banGreen),
+                    );
+                  }
+
                   final allProducts = snapshot.data ?? [];
 
-                  final filteredProducts = allProducts.where((p) {
-                    final String nomProduit = (p['nom_produit'] ?? '').toString().toLowerCase();
-                    
-                    // --- CORRECTION ICI : Utilisation de 'nom_categorie' ---
-                    final String catProduit = (p['nom_categorie'] ?? '').toString().trim().toLowerCase();
-                    final String catSelectionnee = _selectedCategory.trim().toLowerCase();
+                  // Application des filtres
+                  final filteredProducts = allProducts.where((produit) {
+                    final nomProduit = (produit['nom_produit'] ?? '')
+                        .toString()
+                        .toLowerCase();
+
+                    final catProduit = (produit['nom_categorie'] ?? '')
+                        .toString()
+                        .trim()
+                        .toLowerCase();
+
+                    final catSelectionnee = _selectedCategory
+                        .trim()
+                        .toLowerCase();
 
                     if (_searchQuery.isNotEmpty) {
                       return nomProduit.contains(_searchQuery);
-                    } else {
-                      if (_selectedCategory == "Tous") return true;
-                      return catProduit == catSelectionnee;
                     }
+
+                    if (_selectedCategory == "Tous") {
+                      return true;
+                    }
+
+                    return catProduit == catSelectionnee;
                   }).toList();
 
                   if (filteredProducts.isEmpty) {
-                    return Padding(padding: const EdgeInsets.symmetric(vertical: 40), child: Center(child: Text("Aucun produit disponible.")));
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 40),
+                      child: Center(child: Text("Aucun produit disponible.")),
+                    );
                   }
 
                   return ListView.builder(
@@ -147,17 +214,38 @@ class _OngletAccueilState extends State<OngletAccueil> {
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: filteredProducts.length,
                     itemBuilder: (context, index) {
-                      final p = filteredProducts[index];
-                      // Ajustement pour les noms de colonnes
-                      final String nom = (p['nom_produit'] ?? 'Produit').toString().toUpperCase();
-                      final double qte = double.tryParse(p['quantite'].toString()) ?? 0.0;
-                      final double pu = double.tryParse(p['prix_unitaire'].toString()) ?? 0.0;
-                      final String entrepot = p['nom_entrepot'] ?? 'Entrepôt central';
-                      final String unite = p['unite_mesure'] ?? 'Kg';
+                      final produit = filteredProducts[index];
+
+                      // Informations du produit
+                      final String nom = (produit['nom_produit'] ?? 'Produit')
+                          .toString()
+                          .toUpperCase();
+
+                      final double quantite =
+                          double.tryParse(produit['quantite'].toString()) ?? 0;
+
+                      final double prix =
+                          double.tryParse(
+                            produit['prix_unitaire'].toString(),
+                          ) ??
+                          0;
+
+                      final String entrepot =
+                          produit['nom_entrepot'] ?? 'Entrepôt central';
+
+                      final String unite = produit['unite_mesure'] ?? 'Kg';
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: _buildProductCard(nom, qte, pu, unite, entrepot, Icons.eco, banGreen),
+                        child: _buildProductCard(
+                          nom,
+                          quantite,
+                          prix,
+                          unite,
+                          entrepot,
+                          Icons.eco,
+                          banGreen,
+                        ),
                       );
                     },
                   );
@@ -170,42 +258,122 @@ class _OngletAccueilState extends State<OngletAccueil> {
     );
   }
 
-  Widget _buildCategoryCircle(String label, IconData icon, Color color, bool isSelected) {
+  // Widget représentant une catégorie
+  Widget _buildCategoryCircle(
+    String label,
+    IconData icon,
+    Color color,
+    bool isSelected,
+  ) {
     return GestureDetector(
-      onTap: () => setState(() { _searchCtrl.clear(); _searchQuery = ""; _selectedCategory = label; }),
+      onTap: () {
+        _searchCtrl.clear();
+
+        setState(() {
+          _searchQuery = "";
+          _selectedCategory = label;
+        });
+      },
       child: Padding(
         padding: const EdgeInsets.only(right: 20),
         child: Column(
           children: [
             Container(
               padding: const EdgeInsets.all(15),
-              // ignore: deprecated_member_use
-              decoration: BoxDecoration(color: color.withOpacity(isSelected ? 0.2 : 0.1), shape: BoxShape.circle, border: isSelected ? Border.all(color: color, width: 2) : null),
+              decoration: BoxDecoration(
+                // ignore: deprecated_member_use
+                color: color.withOpacity(isSelected ? 0.2 : 0.1),
+                shape: BoxShape.circle,
+                border: isSelected ? Border.all(color: color, width: 2) : null,
+              ),
               child: Icon(icon, color: color, size: 26),
             ),
+
             const SizedBox(height: 6),
-            Text(label, style: GoogleFonts.poppins(fontSize: 11, fontWeight: isSelected ? FontWeight.bold : FontWeight.w500, color: isSelected ? color : Colors.black87)),
+
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                color: isSelected ? color : Colors.black87,
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildProductCard(String title, double quantite, double prixUnitaire, String unite, String entrepot, IconData icon, Color color) {
+  // Carte affichant un produit
+  Widget _buildProductCard(
+    String title,
+    double quantite,
+    double prixUnitaire,
+    String unite,
+    String entrepot,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(15), border: Border.all(color: Colors.grey[200]!)),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.grey[200]!),
+      ),
       child: Row(
         children: [
-          // ignore: deprecated_member_use
-          Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: color.withOpacity(0.1), borderRadius: BorderRadius.circular(12)), child: Icon(icon, color: color, size: 26)),
+          // Icône du produit
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              // ignore: deprecated_member_use
+              color: color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: color, size: 26),
+          ),
+
           const SizedBox(width: 14),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(title, style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14)),
-            Text("Entrepôt : $entrepot", style: GoogleFonts.inter(fontSize: 12, color: Colors.grey)),
-            Text("Stock : $quantite $unite", style: GoogleFonts.inter(fontSize: 11, fontWeight: FontWeight.bold)),
-          ])),
-          Text("${prixUnitaire.toStringAsFixed(2)}\$", style: GoogleFonts.poppins(fontWeight: FontWeight.bold, color: banGreen)),
+
+          // Informations du produit
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: GoogleFonts.poppins(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
+
+                Text(
+                  "Entrepôt : $entrepot",
+                  style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
+                ),
+
+                Text(
+                  "Stock : $quantite $unite",
+                  style: GoogleFonts.inter(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Prix du produit
+          Text(
+            "${prixUnitaire.toStringAsFixed(2)} \$",
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              color: banGreen,
+            ),
+          ),
         ],
       ),
     );

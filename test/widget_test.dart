@@ -1,29 +1,30 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-// Assurez-vous que ce chemin correspond exactement à votre fichier principal
+// Importez votre véritable fichier main.dart
+import 'package:bourse_agricole/main.dart';
 
+/// ======================================================================
+/// TEST DU DÉMARRAGE DE L'APPLICATION BAN
+/// ----------------------------------------------------------------------
+/// Ce test vérifie que l'application démarre correctement
+/// et que son interface principale est bien affichée.
+/// ======================================================================
 void main() {
-  testWidgets('Test de chargement de l\'application BAN', (WidgetTester tester) async {
-    
-    // CORRECTION : Si MyApp souligne, ouvrez lib/main.dart. 
-    // Si vous voyez "class BanApp extends StatelessWidget", remplacez MyApp par BanApp.
-    await tester.pumpWidget(const MyApp() as Widget); 
+  testWidgets(
+    "L'application BAN démarre correctement",
+    (WidgetTester tester) async {
+      // --------------------------------------------------------------
+      // Lancement de l'application
+      // --------------------------------------------------------------
+      await tester.pumpWidget(const MyApp());
 
-    // On attend que l'interface se stabilise (chargement des polices, images, etc.)
-    await tester.pumpAndSettle();
+      // Attendre le chargement complet des widgets
+      await tester.pumpAndSettle();
 
-    // Vérification de la présence du titre de votre bourse
-    // On cherche "BAN" ou "Bourse Agricole" selon ce que vous avez mis dans l'AppBar
-    final titleFinder = find.textContaining('BAN');
-    
-    if (titleFinder.evaluate().isNotEmpty) {
-      expect(titleFinder, findsWidgets);
-    } else {
-    }
-  });
-}
-
-class MyApp {
-  const MyApp();
+      // --------------------------------------------------------------
+      // Vérification qu'un texte contenant "BAN" est présent.
+      // --------------------------------------------------------------
+      expect(find.textContaining("BAN"), findsWidgets);
+    },
+  );
 }

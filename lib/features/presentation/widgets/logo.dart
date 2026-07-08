@@ -1,20 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+/// ======================================================================
+/// LOGO OFFICIEL DE LA BOURSE AGRICOLE NUMÉRIQUE (BAN ITURI)
+/// Ce widget peut être utilisé sur tous les écrans de l'application.
+/// ======================================================================
 class LogoBAN extends StatelessWidget {
   const LogoBAN({super.key});
 
+  /// Couleur officielle de la plateforme
+  static const Color banGreen = Color(0xFF1B5E20);
+
   @override
   Widget build(BuildContext context) {
-    // Utilisation de vos couleurs officielles
-    const Color banGreen = Color(0xFF1B5E20);
-    
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         const SizedBox(height: 40),
-        // Remplacement du SVG par une icône Flutter en attendant votre fichier design
-        // Si vous avez un logo.svg, décommentez la partie SvgPicture ci-dessous
+
+        // -----------------------------------------------------------------
+        // Icône principale
+        // -----------------------------------------------------------------
+        // Vous pouvez remplacer cette icône par votre logo SVG plus tard.
         Container(
           padding: const EdgeInsets.all(15),
           decoration: BoxDecoration(
@@ -23,23 +30,34 @@ class LogoBAN extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           child: const Icon(
-            Icons.eco_rounded, // Icône de feuille/agriculture
+            Icons.eco_rounded,
             size: 60,
             color: banGreen,
           ),
         ),
-        
-        /* SvgPicture.asset(
+
+        /*
+        --------------------------------------------------------------------
+        Si vous possédez un fichier logo_ban.svg,
+        décommentez ce code après avoir ajouté flutter_svg.
+        --------------------------------------------------------------------
+
+        SvgPicture.asset(
           "assets/design/logo_ban.svg",
           width: 70,
           height: 70,
-          colorFilter: const ColorFilter.mode(banGreen, BlendMode.srcIn),
-        ), 
+          colorFilter: const ColorFilter.mode(
+            banGreen,
+            BlendMode.srcIn,
+          ),
+        ),
         */
 
         const SizedBox(height: 15),
-        
-        // Nom de l'application avec une police professionnelle
+
+        // -----------------------------------------------------------------
+        // Nom de l'application
+        // -----------------------------------------------------------------
         Text(
           "BAN ITURI",
           textAlign: TextAlign.center,
@@ -50,7 +68,12 @@ class LogoBAN extends StatelessWidget {
             letterSpacing: 1.2,
           ),
         ),
-        
+
+        const SizedBox(height: 5),
+
+        // -----------------------------------------------------------------
+        // Slogan
+        // -----------------------------------------------------------------
         Text(
           "Bourse Agricole Numérique",
           textAlign: TextAlign.center,

@@ -1,36 +1,68 @@
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-// REPOSITORIES
+// Repositories
 import 'package:bourse_agricole/features/domain/repositories/auth_repository.dart';
 import 'package:bourse_agricole/features/data/repositories/auth_repository_impl.dart';
 
-// USE CASES
+// Use Cases
 import 'package:bourse_agricole/features/domain/usecases/authentification.dart';
 
-// BLOCS
+// Blocs
 import 'package:bourse_agricole/features/presentation/blocs/blocks.dart';
 
+/// Instance unique de GetIt (Injection de dépendances).
 final sl = GetIt.instance;
 
+/// Enregistre tous les services de l'application.
 Future<void> init() async {
-  // 1. EXTERNAL
-  sl.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
+  // =========================
+  // Services externes
+  // =========================
 
-  // 2. REPOSITORIES
-  // On enregistre l'implémentation en lui passant le client Supabase
-  sl.registerLazySingleton<AuthRepository>(() => AuthRepositoryImpl(sl<SupabaseClient>()));
-  
-  // Note: Assure-toi que ProduitRepositoryImpl accepte sl() (le client ou la datasource)
+  /// Client Supabase partagé dans toute l'application.
+  sl.registerLazySingleton<SupabaseClient>(
+    () => Supabase.instance.client,
+  );
 
+  // =========================
+  // Repositories
+  // =========================
 
-  // 3. USE CASES
-  // On passe le repository avec le nom de paramètre "repository" comme défini dans le fichier 3
-  sl.registerLazySingleton(() => Authentifier(repository: sl<AuthRepository>()));
-  sl.registerLazySingleton(() => Enregistrer(repository: sl<AuthRepository>()));
+  /// Gestion de l'authentification.
+  sl.registerLazySingleton<AuthRepository>(
+    () => AuthRepositoryImpl(sl<SupabaseClient>()),
+  );
 
-  // 4. BLOCS
-  // Inscription & Connexion : Ils utilisent directement le repository
-  sl.registerFactory(() => EnregistrerBloc(authRepository: sl<AuthRepository>()));
-  sl.registerFactory(() => AuthentifierBloc(authRepository: sl<AuthRepository>()));
+  // =========================
+  // Use Cases
+  // =========================
+
+  /// Connexion.
+  sl.registerLazySingleton(
+    () => Authentifier(repository: sl<AuthRepository>()),
+  );
+
+  /// Création d'un compte.
+  sl.registerLazySingleton(
+    () => Enregistrer(repository: sl<AuthRepository>()),
+  );
+
+  // =========================
+  // Blocs
+  // =========================
+
+  /// Bloc d'inscription.
+  sl.registerFactory(
+    () => EnregistrerBloc(
+      authRepository: sl<AuthRepository>(),
+    ),
+  );
+
+  /// Bloc de connexion.
+  sl.registerFactory(
+    () => AuthentifierBloc(
+      authRepository: sl<AuthRepository>(),
+    ),
+  );
 }

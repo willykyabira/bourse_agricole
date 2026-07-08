@@ -1,44 +1,58 @@
 import 'package:bourse_agricole/core/resultat/resultat.dart';
 
+/// Contrat que toute source de données (Supabase, API...) doit respecter.
 abstract class DatabaseDatasource {
-  // --- AUTHENTIFICATION & PROFILS ---
-  
-  // Utilise Supabase Auth + insertion dans la table 'profiles' via votre Trigger SQL
+
+  // ================= AUTHENTIFICATION =================
+
+  /// Créer un nouveau compte utilisateur.
   FutureResultat enregistrer({
     required String email,
     required String nomComplet,
     required String motDePasse,
-    required String role, // 'acheteur' ou 'vendeur'
+    required String role,
   });
 
-  // Authentification standard
-  FutureResultat authentifier(String email, String motDePasse);
+  /// Connecter un utilisateur.
+  FutureResultat authentifier(
+    String email,
+    String motDePasse,
+  );
 
+  // ================= PRODUITS =================
 
-  // --- GESTION DES PRODUITS (Table 'public.produits') ---
+  /// Ajouter un produit.
+  FutureResultat ajouterProduit(
+    Map<String, dynamic> donneesProduit,
+  );
 
-  // Pour la section Ventes : Ajoute une ligne dans 'produits'
-  // Note : On utilise un Map pour passer les colonnes : nom, prix_unitaire, categorie_id, etc.
-  FutureResultat ajouterProduit(Map<String, dynamic> donneesProduit);
-
-  // Pour la section Accueil : Récupère la liste avec jointure sur 'vendeurs' et 'categories'
+  /// Obtenir la liste des produits.
   FutureResultat consulterListeProduits();
 
-  // Pour l'écran de détail (Alibaba style)
-  FutureResultat consulterDetailProduit(String idProduit);
+  /// Consulter les détails d'un produit.
+  FutureResultat consulterDetailProduit(
+    String idProduit,
+  );
 
-  // Pour la barre de recherche de la section Achats
-  FutureResultat rechercherProduits(String nomProduit);
+  /// Rechercher un produit par son nom.
+  FutureResultat rechercherProduits(
+    String nomProduit,
+  );
 
-  // Pour permettre au vendeur de retirer un article
-  FutureResultat supprimerProduit(String idProduit);
+  /// Supprimer un produit.
+  FutureResultat supprimerProduit(
+    String idProduit,
+  );
 
+  // ================= COMMANDES =================
 
-  // --- GESTION DES COMMANDES (Table 'public.commandes') ---
+  /// Créer une nouvelle commande.
+  FutureResultat creerCommande(
+    Map<String, dynamic> donneesCommande,
+  );
 
-  // Création d'une commande quand l'acheteur clique sur "Acheter"
-  FutureResultat creerCommande(Map<String, dynamic> donneesCommande);
-  
-  // Pour la section Profil/Achats : Liste des commandes de l'utilisateur
-  FutureResultat consulterMesCommandes(String userId);
+  /// Consulter les commandes d'un utilisateur.
+  FutureResultat consulterMesCommandes(
+    String userId,
+  );
 }

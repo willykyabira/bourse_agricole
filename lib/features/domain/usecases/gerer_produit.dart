@@ -1,36 +1,43 @@
 import 'package:bourse_agricole/core/resultat/resultat.dart';
 import 'package:bourse_agricole/features/domain/repositories/produit_repository.dart';
 
-// Use Case pour ajouter un produit (utilisé par le vendeur)
+/// Cas d'utilisation permettant d'ajouter un produit.
 class AjouterProduit {
   final ProduitRepository repository;
 
-  AjouterProduit({required this.repository});
+  AjouterProduit({
+    required this.repository,
+  });
 
-  // On passe maintenant un Map (nom, prix, catégorie, etc.) au lieu du numéro de série
+  /// Enregistre un nouveau produit.
   FutureResultat call(Map<String, dynamic> produitData) {
     return repository.ajouterProduit(produitData);
   }
 }
 
-// Use Case pour supprimer un produit (utilisé par le vendeur ou l'admin)
+/// Cas d'utilisation permettant de supprimer un produit.
 class SupprimerProduit {
   final ProduitRepository repository;
 
-  SupprimerProduit({required this.repository});
+  SupprimerProduit({
+    required this.repository,
+  });
 
-  // On utilise l'ID unique du produit pour la suppression
+  /// Supprime un produit à partir de son identifiant.
   FutureResultat call(String idProduit) {
     return repository.supprimerProduit(idProduit);
   }
 }
 
-// Use Case additionnel pour la consultation (Section Accueil/Achats)
+/// Cas d'utilisation permettant de consulter les produits.
 class ConsulterProduits {
   final ProduitRepository repository;
 
-  ConsulterProduits({required this.repository});
+  ConsulterProduits({
+    required this.repository,
+  });
 
+  /// Retourne la liste des produits disponibles.
   FutureResultat call() {
     return repository.consulterListeProduits();
   }

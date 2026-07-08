@@ -1,13 +1,17 @@
 import 'package:bourse_agricole/core/resultat/resultat.dart';
 
+/// Contrat que toute implémentation du repository devra respecter.
 abstract class ProduitRepository {
-  
-  // --- MÉTHODES D'AUTHENTIFICATION (À ajouter pour corriger les erreurs) ---
-  
-  /// Permet de connecter un utilisateur
-  FutureResultat authentifier(String email, String motDePasse);
 
-  /// Permet de créer un compte avec nom et rôle
+  // ================= AUTHENTIFICATION =================
+
+  /// Connecter un utilisateur.
+  FutureResultat authentifier(
+    String email,
+    String motDePasse,
+  );
+
+  /// Créer un nouveau compte utilisateur.
   FutureResultat enregistrer({
     required String email,
     required String nomComplet,
@@ -15,18 +19,35 @@ abstract class ProduitRepository {
     required String role,
   });
 
-  // --- MÉTHODES DE PRODUITS ---
+  // ================= PRODUITS =================
 
-  FutureResultat ajouterProduit(Map<String, dynamic> produitData);
-  
-  FutureResultat supprimerProduit(String id);
-  
+  /// Ajouter un produit.
+  FutureResultat ajouterProduit(
+    Map<String, dynamic> produitData,
+  );
+
+  /// Supprimer un produit.
+  FutureResultat supprimerProduit(
+    String id,
+  );
+
+  /// Obtenir tous les produits.
   FutureResultat consulterListeProduits();
-  
-  FutureResultat consulterDetailProduit(String id);
 
-  FutureResultat rechercherProduits(String query);
-  
-  // Ajout de la commande pour le flux complet
-  FutureResultat creerCommande(Map<String, dynamic> donneesCommande);
+  /// Consulter un produit précis.
+  FutureResultat consulterDetailProduit(
+    String id,
+  );
+
+  /// Rechercher des produits.
+  FutureResultat rechercherProduits(
+    String query,
+  );
+
+  // ================= COMMANDES =================
+
+  /// Créer une nouvelle commande.
+  FutureResultat creerCommande(
+    Map<String, dynamic> donneesCommande,
+  );
 }

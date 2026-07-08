@@ -4,11 +4,15 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.10.4
+  sdk: '>=3.10.4 <4.0.0'
 
 dependencies:
   flutter:
     sdk: flutter
+  
+  # Utilisation de http pour communiquer avec l'API PawaPay
+  http: ^1.2.0
+  flutter_dotenv: ^6.0.1
 
   # --- LOCALISATION ---
   flutter_localizations:
@@ -22,7 +26,6 @@ dependencies:
   # --- BACKEND ---
   supabase_flutter: ^2.12.2
   go_router: ^17.2.1
-  flutter_dotenv: ^6.0.1
   get_it: ^9.2.1
   google_fonts: ^8.1.0
   flutter_bloc: ^9.1.1

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// Assure-toi que ces fichiers existent dans ton projet
 import 'onglet_accueil.dart';
 import 'onglet_achats.dart';
 import 'onglet_ventes.dart';
@@ -15,13 +14,17 @@ class PageAccueilClient extends StatefulWidget {
 }
 
 class _PageAccueilClientState extends State<PageAccueilClient> {
+  // Onglet actuellement sélectionné.
   int _currentIndex = 0;
 
-  // Couleurs Officielles BAN Bunia
+  // Couleurs officielles BAN.
   final Color banGreenTop = const Color(0xFF1B5E20);
+
   final Color banBlueBottom = const Color(0xFF3F51B5);
+
   final Color banGold = const Color(0xFFFBC02D);
 
+  // Pages affichées dans l'application.
   late final List<Widget> _sections = [
     const OngletAccueil(),
     const OngletAchats(),
@@ -33,14 +36,13 @@ class _PageAccueilClientState extends State<PageAccueilClient> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+
       body: Column(
         children: [
-          // ==========================================
-          // 1. HEADER AGRANDI (Style Premium)
-          // ==========================================
+          // En-tête principal.
           Container(
             width: double.infinity,
-            height: 200, // Hauteur augmentée pour le prestige
+            height: 200,
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
@@ -48,12 +50,13 @@ class _PageAccueilClientState extends State<PageAccueilClient> {
                 colors: [banGreenTop, banBlueBottom],
               ),
             ),
+
             child: SafeArea(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25),
                 child: Row(
                   children: [
-                    // LOGO À GAUCHE (Cercle blanc sans texte)
+                    // Logo BAN.
                     Container(
                       width: 75,
                       height: 75,
@@ -65,20 +68,21 @@ class _PageAccueilClientState extends State<PageAccueilClient> {
                             color: Colors.black26,
                             blurRadius: 12,
                             offset: Offset(0, 5),
-                          )
+                          ),
                         ],
                       ),
                       child: Center(
-                        // Ici, on met l'icône seule pour la clarté
                         child: Icon(
-                          Icons.eco_rounded, 
-                          color: banGreenTop, 
-                          size: 45
+                          Icons.eco_rounded,
+                          color: banGreenTop,
+                          size: 45,
                         ),
                       ),
                     ),
+
                     const SizedBox(width: 20),
-                    // TITRE À CÔTÉ DU LOGO
+
+                    // Nom de l'application.
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,6 +96,7 @@ class _PageAccueilClientState extends State<PageAccueilClient> {
                             letterSpacing: 2,
                           ),
                         ),
+
                         Text(
                           "Bourse Agricole Numérique",
                           style: GoogleFonts.poppins(
@@ -108,18 +113,16 @@ class _PageAccueilClientState extends State<PageAccueilClient> {
             ),
           ),
 
-          // ==========================================
-          // 2. CONTENU DANS LA CAPSULE BLANCHE (Effet Remontée)
-          // ==========================================
+          // Zone contenant les différentes pages.
           Expanded(
             child: Transform.translate(
-              offset: const Offset(0, -45), // L'effet de chevauchement
+              offset: const Offset(0, -45),
               child: Container(
                 width: double.infinity,
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(45), // Arrondi style capture Safari
+                    topLeft: Radius.circular(45),
                     topRight: Radius.circular(45),
                   ),
                   boxShadow: [
@@ -127,13 +130,15 @@ class _PageAccueilClientState extends State<PageAccueilClient> {
                       color: Colors.black12,
                       blurRadius: 15,
                       offset: Offset(0, -5),
-                    )
+                    ),
                   ],
                 ),
+
                 child: Column(
                   children: [
                     const SizedBox(height: 30),
-                    // Titre de l'onglet actif
+
+                    // Titre de la page courante.
                     Text(
                       _getSectionTitle(),
                       style: GoogleFonts.poppins(
@@ -143,8 +148,10 @@ class _PageAccueilClientState extends State<PageAccueilClient> {
                         letterSpacing: 1.2,
                       ),
                     ),
+
                     const SizedBox(height: 8),
-                    // Barre décorative dorée
+
+                    // Barre décorative.
                     Container(
                       height: 4,
                       width: 35,
@@ -153,9 +160,10 @@ class _PageAccueilClientState extends State<PageAccueilClient> {
                         borderRadius: BorderRadius.circular(10),
                       ),
                     ),
+
                     const SizedBox(height: 15),
-                    
-                    // L'espace où vos contenus s'affichent
+
+                    // Affiche l'onglet sélectionné.
                     Expanded(
                       child: IndexedStack(
                         index: _currentIndex,
@@ -169,23 +177,33 @@ class _PageAccueilClientState extends State<PageAccueilClient> {
           ),
         ],
       ),
-      // ==========================================
-      // 3. FOOTER CLARIFIÉ (Navigation Basse)
-      // ==========================================
+
+      // Barre de navigation.
       bottomNavigationBar: _buildBanBottomNav(),
     );
   }
 
+  /// Retourne le titre de l'onglet actif.
   String _getSectionTitle() {
     switch (_currentIndex) {
-      case 0: return "ACCUEIL";
-      case 1: return "BOUTIQUE";
-      case 2: return "MES ARTICLES";
-      case 3: return "MON PROFIL";
-      default: return "";
+      case 0:
+        return "ACCUEIL";
+
+      case 1:
+        return "BOUTIQUE";
+
+      case 2:
+        return "MES ARTICLES";
+
+      case 3:
+        return "MON PROFIL";
+
+      default:
+        return "";
     }
   }
 
+  /// Barre de navigation située en bas de l'écran.
   Widget _buildBanBottomNav() {
     return Container(
       decoration: BoxDecoration(
@@ -201,37 +219,50 @@ class _PageAccueilClientState extends State<PageAccueilClient> {
       ),
       child: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (index) => setState(() => _currentIndex = index),
+
+        // Change l'onglet sélectionné.
+        onTap: (index) {
+          setState(() => _currentIndex = index);
+        },
+
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
         elevation: 0,
+
         selectedItemColor: banGreenTop,
         unselectedItemColor: Colors.grey[500],
+
         selectedLabelStyle: GoogleFonts.poppins(
           fontWeight: FontWeight.w700,
           fontSize: 12,
         ),
+
         unselectedLabelStyle: GoogleFonts.poppins(
           fontWeight: FontWeight.w500,
           fontSize: 11,
         ),
+
         showUnselectedLabels: true,
+
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.grid_view_outlined),
             activeIcon: Icon(Icons.grid_view_rounded),
             label: "Accueil",
           ),
+
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_bag_outlined),
             activeIcon: Icon(Icons.shopping_bag_rounded),
             label: "Achats",
           ),
+
           BottomNavigationBarItem(
             icon: Icon(Icons.storefront_outlined),
             activeIcon: Icon(Icons.storefront_rounded),
             label: "Ventes",
           ),
+
           BottomNavigationBarItem(
             icon: Icon(Icons.person_outline_rounded),
             activeIcon: Icon(Icons.person_rounded),
