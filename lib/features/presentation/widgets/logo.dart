@@ -19,39 +19,14 @@ class LogoBAN extends StatelessWidget {
         const SizedBox(height: 40),
 
         // -----------------------------------------------------------------
-        // Icône principale
+        // Logo officiel (image PNG)
         // -----------------------------------------------------------------
-        // Vous pouvez remplacer cette icône par votre logo SVG plus tard.
-        Container(
-          padding: const EdgeInsets.all(15),
-          decoration: BoxDecoration(
-            // ignore: deprecated_member_use
-            color: banGreen.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.eco_rounded,
-            size: 60,
-            color: banGreen,
-          ),
+        Image.asset(
+          "assets/images/logo_ban.png",
+          width: 80,
+          height: 80,
+          fit: BoxFit.contain,
         ),
-
-        /*
-        --------------------------------------------------------------------
-        Si vous possédez un fichier logo_ban.svg,
-        décommentez ce code après avoir ajouté flutter_svg.
-        --------------------------------------------------------------------
-
-        SvgPicture.asset(
-          "assets/design/logo_ban.svg",
-          width: 70,
-          height: 70,
-          colorFilter: const ColorFilter.mode(
-            banGreen,
-            BlendMode.srcIn,
-          ),
-        ),
-        */
 
         const SizedBox(height: 15),
 

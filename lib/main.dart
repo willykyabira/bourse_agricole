@@ -1,55 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'dart:io'; // 1. AJOUT DE CET IMPORT
+import 'dart:io';
 
 import 'package:bourse_agricole/dependency_injection.dart' as di;
+import 'package:bourse_agricole/core/services/toast_service.dart';
 
 // Pages de l'application
+import 'package:bourse_agricole/features/presentation/pages/splash_screen.dart';
 import 'package:bourse_agricole/features/presentation/pages/connexion.dart';
 import 'package:bourse_agricole/features/presentation/pages/creer_compte.dart';
 import 'package:bourse_agricole/features/presentation/pages/page_accueil_client.dart';
 
-// 2. AJOUT DE CETTE CLASSE POUR CONTOURNER LES BLOCAGES SSL SUR L'ÉMULATEUR
 class MyHttpOverrides extends HttpOverrides {
   @override
   HttpClient createHttpClient(SecurityContext? context) {
     return super.createHttpClient(context)
-      ..badCertificateCallback = (X509Certificate cert, String host, int port) => true;
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
   }
 }
 
-/// ======================================================================
-/// Point d'entrée de l'application.
-/// ======================================================================
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 3. ACTIVATION DU CORRECTIF RÉSEAU
   HttpOverrides.global = MyHttpOverrides();
 
   try {
-    // --------------------------------------------------------------
-    // 1. Charger les variables d'environnement (.env)
-    // --------------------------------------------------------------
     await dotenv.load(fileName: ".env");
 
-    // --------------------------------------------------------------
-    // 2. Initialiser Supabase
-    // --------------------------------------------------------------
     await Supabase.initialize(
       url: dotenv.get("SUPABASE_URL"),
       anonKey: dotenv.get("SUPABASE_ANON_KEY"),
     );
 
-    // --------------------------------------------------------------
-    // 3. Initialiser les dépendances
-    // --------------------------------------------------------------
     await di.init();
 
-    // --------------------------------------------------------------
-    // 4. Lancer l'application
-    // --------------------------------------------------------------
+    di.sl<ToastService>();
+
     runApp(const MyApp());
   } catch (e) {
     runApp(
@@ -73,9 +61,6 @@ Future<void> main() async {
   }
 }
 
-/// ======================================================================
-/// Widget principal
-/// ======================================================================
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -87,18 +72,15 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'BAN ITURI',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: banGreen,
-        ),
+        colorScheme: ColorScheme.fromSeed(seedColor: banGreen),
         useMaterial3: true,
       ),
-      initialRoute: '/',
+      initialRoute: '/splash',
       routes: {
+        '/splash': (_) => const SplashScreen(),
         '/': (_) => const EcranConnexionClient(),
         '/inscription': (_) => const CreationCompte(),
-        '/accueil': (_) => const PageAccueilClient(
-              role: 'Acheteur',
-            ),
+        '/accueil': (_) => const PageAccueilClient(role: 'Acheteur'),
       },
     );
   }

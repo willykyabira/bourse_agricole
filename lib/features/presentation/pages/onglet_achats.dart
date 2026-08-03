@@ -18,48 +18,49 @@ class _OngletAchatsState extends State<OngletAchats> {
   // Couleur identitaire de la plateforme BAN
   final Color banGreen = const Color(0xFF1B5E20);
 
+  Map<String, String> _entrepots = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _chargerEntrepots();
+  }
+
+  /// Charge la liste des entrepôts depuis la base de données
+  Future<void> _chargerEntrepots() async {
+    try {
+      final result = await Supabase.instance.client
+          .from('entrepots')
+          .select('id, nom_entrepot');
+      final map = <String, String>{};
+      for (final e in (result as List)) {
+        final id = e['id']?.toString();
+        final nom = e['nom_entrepot']?.toString();
+        if (id != null && nom != null) map[id] = nom;
+      }
+      if (mounted) setState(() => _entrepots = map);
+    } catch (_) {
+      // Garder la map vide en cas d'erreur
+    }
+  }
+
+  /// Retourne le nom du lieu (entrepôt) lié au produit
+  String _lieuProduit(Map<String, dynamic> produit) {
+    final dynamic id = produit['entrepot_id'];
+    if (id != null && _entrepots.containsKey(id.toString())) {
+      return _entrepots[id.toString()]!;
+    }
+    final dynamic nom = produit['nom_entrepot'] ?? produit['emplacement'];
+    if (nom != null && nom.toString().isNotEmpty) return nom.toString();
+    return 'Non spécifié';
+  }
+
   @override
   Widget build(BuildContext context) {
     final supabase = Supabase.instance.client;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: Text(
-          "Nos offres",
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        backgroundColor: Colors.white,
-        foregroundColor: banGreen,
-        elevation: 0.5,
-        actions: [
-          // Bouton d'accès direct à l'historique et aux factures de l'utilisateur
-          TextButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const HistoriquePage(),
-                ),
-              );
-            },
-            icon: Icon(
-              Icons.receipt_long_rounded,
-              color: banGreen,
-              size: 20,
-            ),
-            label: Text(
-              "Mes factures",
-              style: GoogleFonts.poppins(
-                color: banGreen,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           // SECTION NOTE D'INFORMATION (Exigence 1 : Transparence sur l'identité)
@@ -69,16 +70,52 @@ class _OngletAchatsState extends State<OngletAchats> {
             color: Colors.white,
             child: Column(
               children: [
-                Text(
-                  "Sélectionnez un produit pour lancer votre commande. Votre identité et votre contact seront récupérés automatiquement depuis votre profil sécurisé.",
-                  textAlign: TextAlign.center,
-                  style: GoogleFonts.inter(
-                    fontSize: 12.5,
-                    color: Colors.grey.shade700,
-                    fontWeight: FontWeight.w500,
-                  ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        "Sélectionnez un produit pour lancer votre commande. Votre identité et votre contact seront récupérés automatiquement depuis votre profil sécurisé.",
+                        style: GoogleFonts.inter(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const HistoriquePage(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: banGreen,
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 10,
+                        ),
+                      ),
+                      icon: const Icon(Icons.receipt_long_rounded, size: 16),
+                      label: Text(
+                        "Factures",
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 // BANDEAU DES PARTENAIRES DE PAIEMENT (Exigence 2 : Réalisme Passerelle)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -94,7 +131,7 @@ class _OngletAchatsState extends State<OngletAchats> {
                       ),
                     ),
                     Text(
-                      "Sunbox • PowerPay",
+                      "Sanbox • PawaPay",
                       style: GoogleFonts.inter(
                         fontSize: 11,
                         color: Colors.grey.shade600,
@@ -151,7 +188,7 @@ class _OngletAchatsState extends State<OngletAchats> {
                     final String nom = (produit['nom_produit'] ?? 'Produit').toString().toUpperCase();
                     final double quantite = double.tryParse(produit['quantite'].toString()) ?? 0.0;
                     final double prix = double.tryParse(produit['prix_unitaire'].toString()) ?? 0.0;
-                    final String entrepot = produit['nom_entrepot'] ?? produit['emplacement'] ?? 'Entrepôt central';
+                    final String entrepot = _lieuProduit(produit);
                     final String unite = produit['unite_mesure'] ?? 'Kg';
 
                     // Détermination de l'état du stock (Exigence 4)
@@ -176,10 +213,17 @@ class _OngletAchatsState extends State<OngletAchats> {
                                   if (user != null) {
                                     final data = await supabase
                                         .from('profiles') 
-                                        .select()
+                                        .select('*, entrepots(nom_entrepot)')
                                         .eq('id', user.id)
-                                        .single();
-                                    profilCharge = data;
+                                        .maybeSingle();
+                                    if (data != null) {
+                                      profilCharge = Map<String, dynamic>.from(data);
+                                      if (data['entrepots'] != null && data['entrepots']['nom_entrepot'] != null) {
+                                        profilCharge['nom_entrepot'] = data['entrepots']['nom_entrepot'];
+                                      } else {
+                                        profilCharge['nom_entrepot'] = entrepot;
+                                      }
+                                    }
                                   }
                                 } catch (e) {
                                   // Repli sécurisé (Fallback metadata)
@@ -339,7 +383,7 @@ class _OngletAchatsState extends State<OngletAchats> {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                "${prixUnitaire.toStringAsFixed(2)}\$",
+                "${(prixUnitaire * 1.2).toInt()}CDF",
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.w800,
                   color: estDisponible ? color : Colors.grey,

@@ -11,6 +11,9 @@ import 'package:bourse_agricole/features/domain/usecases/authentification.dart';
 // Blocs
 import 'package:bourse_agricole/features/presentation/blocs/blocks.dart';
 
+// Services
+import 'package:bourse_agricole/core/services/toast_service.dart';
+
 /// Instance unique de GetIt (Injection de dépendances).
 final sl = GetIt.instance;
 
@@ -20,16 +23,22 @@ Future<void> init() async {
   // Services externes
   // =========================
 
-  /// Client Supabase partagé dans toute l'application.
   sl.registerLazySingleton<SupabaseClient>(
     () => Supabase.instance.client,
+  );
+
+  // =========================
+  // Services
+  // =========================
+
+  sl.registerLazySingleton<ToastService>(
+    () => ToastService(),
   );
 
   // =========================
   // Repositories
   // =========================
 
-  /// Gestion de l'authentification.
   sl.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(sl<SupabaseClient>()),
   );
@@ -38,12 +47,10 @@ Future<void> init() async {
   // Use Cases
   // =========================
 
-  /// Connexion.
   sl.registerLazySingleton(
     () => Authentifier(repository: sl<AuthRepository>()),
   );
 
-  /// Création d'un compte.
   sl.registerLazySingleton(
     () => Enregistrer(repository: sl<AuthRepository>()),
   );
@@ -52,14 +59,12 @@ Future<void> init() async {
   // Blocs
   // =========================
 
-  /// Bloc d'inscription.
   sl.registerFactory(
     () => EnregistrerBloc(
       authRepository: sl<AuthRepository>(),
     ),
   );
 
-  /// Bloc de connexion.
   sl.registerFactory(
     () => AuthentifierBloc(
       authRepository: sl<AuthRepository>(),

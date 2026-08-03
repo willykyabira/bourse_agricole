@@ -20,6 +20,9 @@ class _OngletAccueilState extends State<OngletAccueil> {
   final Color banGreen = const Color(0xFF1B5E20);
   final Color banGold = const Color(0xFFFBC02D);
 
+  // Map des entrepôts (id -> nom) pour afficher le lieu lié au produit
+  Map<String, String> _entrepots = {};
+
   // Liste des catégories disponibles
   final List<Map<String, dynamic>> _categories = [
     {"name": "Tous", "icon": Icons.grid_view},
@@ -29,6 +32,49 @@ class _OngletAccueilState extends State<OngletAccueil> {
     {"name": "Fruits", "icon": Icons.apple},
     {"name": "Élevage", "icon": Icons.pets},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _chargerEntrepots();
+  }
+
+  /// Charge la liste des entrepôts pour faire correspondre
+  /// entrepot_id -> nom_entrepot (lieu du produit).
+  Future<void> _chargerEntrepots() async {
+    try {
+      final result = await Supabase.instance.client
+          .from('entrepots')
+          .select('id, nom_entrepot');
+      final map = <String, String>{};
+      for (final e in (result as List)) {
+        final id = e['id']?.toString();
+        final nom = e['nom_entrepot']?.toString();
+        if (id != null && nom != null) map[id] = nom;
+      }
+      if (mounted) setState(() => _entrepots = map);
+    } catch (_) {
+      // En cas d'erreur, on garde la map vide (affichage par défaut)
+    }
+  }
+
+  /// Retourne le nom du lieu (entrepôt) lié au produit.
+  String _lieuProduit(Map<String, dynamic> produit) {
+    final dynamic id = produit['entrepot_id'];
+    
+    // Si on a un ID, on cherche dans la map chargée.
+    if (id != null && _entrepots.containsKey(id.toString())) {
+      return _entrepots[id.toString()]!;
+    }
+    
+    // Sinon, on essaie de voir si le champ entrepot contient une info directe (legacy)
+    final dynamic nomDirect = produit['entrepot'];
+    if (nomDirect != null && nomDirect.toString().isNotEmpty) {
+      return nomDirect.toString();
+    }
+    
+    return 'Non spécifié';
+  }
 
   @override
   void dispose() {
@@ -230,8 +276,7 @@ class _OngletAccueilState extends State<OngletAccueil> {
                           ) ??
                           0;
 
-                      final String entrepot =
-                          produit['nom_entrepot'] ?? 'Entrepôt central';
+                      final String entrepot = _lieuProduit(produit);
 
                       final String unite = produit['unite_mesure'] ?? 'Kg';
 
@@ -350,9 +395,19 @@ class _OngletAccueilState extends State<OngletAccueil> {
                   ),
                 ),
 
-                Text(
-                  "Entrepôt : $entrepot",
-                  style: GoogleFonts.inter(fontSize: 12, color: Colors.grey),
+                Row(
+                  children: [
+                    Icon(Icons.location_on_outlined,
+                        size: 13, color: Colors.grey[600]),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        "Lieu : $entrepot",
+                        style:
+                            GoogleFonts.inter(fontSize: 12, color: Colors.grey),
+                      ),
+                    ),
+                  ],
                 ),
 
                 Text(
@@ -368,7 +423,7 @@ class _OngletAccueilState extends State<OngletAccueil> {
 
           // Prix du produit
           Text(
-            "${prixUnitaire.toStringAsFixed(2)} \$",
+            "${(prixUnitaire * 1.2).toInt()} CDF",
             style: GoogleFonts.poppins(
               fontWeight: FontWeight.bold,
               color: banGreen,

@@ -51,6 +51,14 @@ abstract class DatabaseDatasource {
     Map<String, dynamic> donneesCommande,
   );
 
+  /// Marquer une livraison comme reçue.
+  FutureResultat marquerLivraisonRecue(String commandeId);
+
+  /// Effectuer un retrait de stock.
+  FutureResultat effectuerRetrait(
+    Map<String, dynamic> donneesRetrait,
+  );
+
   /// Consulter les commandes d'un utilisateur.
   FutureResultat consulterMesCommandes(
     String userId,

@@ -2,9 +2,37 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'facture_proforma.dart'; // Pour permettre la réimpression si besoin
+import '../widgets/ban_layout_scaffold.dart';
 
-class HistoriquePage extends StatelessWidget {
+class HistoriquePage extends StatefulWidget {
   const HistoriquePage({super.key});
+
+  @override
+  State<HistoriquePage> createState() => _HistoriquePageState();
+}
+
+class _HistoriquePageState extends State<HistoriquePage> {
+  Map<String, String> _entrepotsMap = {};
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _chargerEntrepots();
+  }
+
+  Future<void> _chargerEntrepots() async {
+    final supabase = Supabase.instance.client;
+    final entrepotsData = await supabase.from('entrepots').select('id, nom_entrepot');
+    if (!mounted) return;
+    setState(() {
+      _entrepotsMap = {
+        for (var item in entrepotsData as List)
+          item['id'].toString(): item['nom_entrepot'].toString()
+      };
+      _isLoading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -12,25 +40,25 @@ class HistoriquePage extends StatelessWidget {
     final user = supabase.auth.currentUser;
     final Color banGreen = const Color(0xFF1B5E20);
 
-    // SÉCURITÉ TRANSVERSALE : Si pas connecté, on bloque l'accès
     if (user == null) {
-      return Scaffold(
+      return BanLayoutScaffold(
+        bodyTitle: "Mes Factures & Achats",
         body: Center(
           child: Text("Veuillez vous connecter pour voir vos factures.", style: GoogleFonts.inter()),
         ),
       );
     }
+    
+    if (_isLoading) {
+      return BanLayoutScaffold(
+        bodyTitle: "Mes Factures & Achats",
+        body: Center(child: CircularProgressIndicator(color: banGreen)),
+      );
+    }
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        title: Text("Mes Factures & Achats", style: GoogleFonts.poppins(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        foregroundColor: banGreen,
-        elevation: 0.5,
-      ),
+    return BanLayoutScaffold(
+      bodyTitle: "Mes Factures & Achats",
       body: StreamBuilder<List<Map<String, dynamic>>>(
-        // Récupération des commandes uniquement de l'utilisateur connecté
         stream: supabase
             .from('commandes')
             .stream(primaryKey: ['id'])
@@ -64,6 +92,11 @@ class HistoriquePage extends StatelessWidget {
             itemCount: commandes.length,
             itemBuilder: (context, index) {
               final cmd = commandes[index];
+              
+              final String? entrepotId = cmd['entrepot_id']?.toString();
+              final String lieuLivraison = (entrepotId != null && _entrepotsMap.containsKey(entrepotId))
+                  ? _entrepotsMap[entrepotId]!
+                  : (cmd['lieu_livraison'] ?? 'NON SPECIFIÉ');
               
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
@@ -111,14 +144,13 @@ class HistoriquePage extends StatelessWidget {
                             style: GoogleFonts.inter(fontSize: 12, color: Colors.grey.shade600),
                           ),
                           Text(
-                            "${(cmd['prix_total'] as num?)?.toDouble().toStringAsFixed(2)} \$",
+                            "${(((cmd['prix_total'] as num?)?.toDouble() ?? 0.0) * 1.2).toInt()} CDF",
                             style: GoogleFonts.poppins(fontWeight: FontWeight.bold, fontSize: 14),
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
                       
-                      // Bouton pour ouvrir les détails ou réimprimer
                       SizedBox(
                         width: double.infinity,
                         height: 36,
@@ -128,7 +160,6 @@ class HistoriquePage extends StatelessWidget {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           ),
                           onPressed: () {
-                            // Redirection vers l'affichage proforma pour réimpression
                             Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -145,8 +176,9 @@ class HistoriquePage extends StatelessWidget {
                                   infoPaiement: {
                                     'referenceFacture': cmd['reference_facture'],
                                     'modePaiement': cmd['mode_paiement'],
-                                    'lieuLivraison': cmd['lieu_livraison'],
+                                    'lieuLivraison': lieuLivraison,
                                     'statutFinancier': cmd['statut'],
+                                    'prix_total': cmd['prix_total'],
                                   },
                                 ),
                               ),

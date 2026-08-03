@@ -51,6 +51,8 @@ class _OngletVentesState extends State<OngletVentes> {
     super.dispose();
   }
 
+  Map<String, String> _entrepotsMap = {};
+
   /// Charge les produits de l'utilisateur.
   Future<void> _chargerDonnees() async {
     // Aucun utilisateur connecté.
@@ -68,6 +70,14 @@ class _OngletVentesState extends State<OngletVentes> {
     });
 
     try {
+      // Charger les entrepôts
+      final entrepotsData = await supabase.from('entrepots').select('id, nom_entrepot');
+      _entrepotsMap = {
+        for (var item in entrepotsData as List)
+          item['id'].toString(): item['nom_entrepot'].toString()
+      };
+
+      // Charger les produits
       final data = await supabase
           .from('produits')
           .select()
@@ -301,13 +311,25 @@ class _OngletVentesState extends State<OngletVentes> {
     // Informations du produit.
     final String nomProduit = item['nom_produit'] ?? 'Produit Inconnu';
 
-    final String entrepot = item['entrepot'] ?? 'Hangar Principal (Bunia)';
+    final String? entrepotId = item['entrepot_id']?.toString();
+    final String entrepot = (entrepotId != null && _entrepotsMap.containsKey(entrepotId))
+        ? _entrepotsMap[entrepotId]!
+        : (item['entrepot'] ?? 'Hangar Principal (Bunia)');
 
     final double quantite = (item['quantite'] as num?)?.toDouble() ?? 0.0;
 
     final String unite = item['unite_mesure'] ?? 'Kg';
 
-    final String statut = item['est_publie'] == true ? 'En vente' : 'En stock';
+    final bool estDisponible = quantite > 0;
+    final String statut = estDisponible
+        ? (item['est_publie'] == true ? 'En vente' : 'En stock')
+        : 'Rupture de stock';
+    final Color statutColor = estDisponible
+        ? (item['est_publie'] == true ? Colors.green.shade700 : Colors.blue.shade900)
+        : Colors.red.shade700;
+    final Color statutBgColor = estDisponible
+        ? (item['est_publie'] == true ? Colors.green.shade50 : Colors.blue.shade50)
+        : Colors.red.shade50;
 
     final String dateDepot = item['created_at'] != null
         ? item['created_at'].toString().substring(0, 10)
@@ -356,13 +378,13 @@ class _OngletVentesState extends State<OngletVentes> {
                     vertical: 5,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.blue.shade50,
+                    color: statutBgColor,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     statut,
                     style: TextStyle(
-                      color: Colors.blue.shade900,
+                      color: statutColor,
                       fontWeight: FontWeight.bold,
                       fontSize: 11,
                     ),
@@ -446,7 +468,7 @@ class _OngletVentesState extends State<OngletVentes> {
                       const SizedBox(height: 2),
 
                       Text(
-                        "${prixEstime.toStringAsFixed(2)} \$",
+                        "${(prixEstime * 1.2).toInt()} CDF",
                         style: GoogleFonts.inter(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
